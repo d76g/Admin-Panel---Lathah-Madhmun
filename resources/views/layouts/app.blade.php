@@ -673,13 +673,25 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
 
 
 
-    var database = firebase.firestore();
-
-    var geoFirestore = new GeoFirestore(database);
-
-    var createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
-
-    var createdAt = {_nanoseconds: createdAtman.nanoseconds, _seconds: createdAtman.seconds};
+    // Initialize Firebase-dependent variables safely
+    var database, geoFirestore, createdAt, createdAtman, languages_list_main = [];
+    
+    try {
+        // Check if Firebase is initialized before using it
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            database = firebase.firestore();
+            geoFirestore = new GeoFirestore(database);
+            createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
+            createdAt = {_nanoseconds: createdAtman.nanoseconds, _seconds: createdAtman.seconds};
+        } else {
+            console.warn('Firebase is not initialized. Some features may not work. Please check your Firebase configuration in .env file.');
+        }
+    } catch (error) {
+        console.error('Error initializing Firebase:', error);
+    }
+    
+    // Only proceed with Firebase operations if database is available
+    if (database) {
 
 
 
@@ -786,6 +798,7 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         }
 
     });
+    } // End of if (database) block for initial Firebase setup
 
 
 
@@ -857,27 +870,29 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
 
 
 
-    var version = database.collection('settings').doc("Version");
+    if (database) {
+        var version = database.collection('settings').doc("Version");
 
-    version.get().then(async function (snapshots) {
+        version.get().then(async function (snapshots) {
 
-        var version_data = snapshots.data();
+            var version_data = snapshots.data();
 
-        if (version_data == undefined) {
+            if (version_data == undefined) {
 
-            database.collection('settings').doc('Version').set({});
+                database.collection('settings').doc('Version').set({});
 
-        }
+            }
 
-        try {
+            try {
 
-            $('.web_version').html("V:" + version_data.web_version);
+                $('.web_version').html("V:" + version_data.web_version);
 
-        } catch (error) {
+            } catch (error) {
 
-        }
+            }
 
-    });
+        });
+    }
 
 
 

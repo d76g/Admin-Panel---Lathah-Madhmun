@@ -1,4 +1,23 @@
 <?php
+// CRITICAL: Start output buffering FIRST to catch any deprecation warnings
+ob_start();
+
+// Suppress deprecation warnings for PHP 8.4 compatibility
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+
+// Custom error handler to completely suppress deprecation warnings
+// This catches deprecation warnings before they can be output
+$previousErrorHandler = set_error_handler(function($errno, $errstr, $errfile, $errline) use (&$previousErrorHandler) {
+    // Completely suppress deprecation and strict warnings
+    if ($errno === E_DEPRECATED || $errno === E_STRICT) {
+        return true; // Suppress the error - don't output it
+    }
+    // Pass other errors to previous handler or default behavior
+    if ($previousErrorHandler) {
+        return $previousErrorHandler($errno, $errstr, $errfile, $errline);
+    }
+    return false;
+}, E_ALL);
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
@@ -45,6 +64,10 @@ require __DIR__.'/../vendor/autoload.php';
 */
 
 $app = require_once __DIR__.'/../bootstrap/app.php';
+
+// Clean output buffer to remove any deprecation warnings that were captured
+// This prevents "headers already sent" errors
+ob_end_clean();
 
 $kernel = $app->make(Kernel::class);
 
