@@ -98,10 +98,43 @@
 @endsection
 @section('scripts')
 <script>
-    var database = firebase.firestore();
+    // Initialize Firebase-dependent variables safely
+    var database, storageRef;
     var photo = "";
     var fileName = '';
-    var storageRef = firebase.storage().ref('images');
+    
+    // Wait for Firebase to be initialized
+    function initializeFirebaseServices() {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            try {
+                database = firebase.firestore();
+                storageRef = firebase.storage().ref('images');
+                console.log('Firebase services initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Error initializing Firebase services:', error);
+                return false;
+            }
+        } else {
+            console.warn('Firebase not initialized yet, retrying...');
+            // Retry after a short delay
+            setTimeout(initializeFirebaseServices, 500);
+            return false;
+        }
+    }
+    
+    // Initialize on page load
+    $(document).ready(function() {
+        if (!initializeFirebaseServices()) {
+            // If not ready, wait a bit more
+            setTimeout(function() {
+                if (!initializeFirebaseServices()) {
+                    console.error('Firebase initialization failed. Please check your Firebase configuration.');
+                    alert('Firebase is not properly configured. Banner images cannot be uploaded. Please check your Firebase settings.');
+                }
+            }, 1000);
+        }
+    });
     $("input[name='redirect_type']:radio").change(function() {
         var redirect_type = $(this).val();
         if (redirect_type == "store") {
@@ -141,16 +174,51 @@
     }
     async function storeImageData() {
         var newPhoto = '';
+        
+        // Check if Firebase Storage is available
+        if (!storageRef) {
+            console.error('Firebase Storage is not initialized');
+            alert('Firebase Storage is not available. Please check your Firebase configuration.');
+            throw new Error('Firebase Storage not initialized');
+        }
+        
+        if (!photo || photo === '') {
+            console.error('No image selected');
+            throw new Error('No image selected');
+        }
+        
         try {
-            photo = photo.replace(/^data:image\/[a-z]+;base64,/, "")
-            var uploadTask = await storageRef.child(fileName).putString(photo, 'base64', {
-                contentType: 'image/jpg'
+            // Remove data URL prefix if present
+            var base64Data = photo.replace(/^data:image\/[a-z]+;base64,/, "");
+            
+            if (!base64Data) {
+                throw new Error('Invalid image data');
+            }
+            
+            // Determine content type from file extension or default to jpeg
+            var contentType = 'image/jpeg';
+            if (fileName) {
+                var ext = fileName.split('.').pop().toLowerCase();
+                if (ext === 'png') contentType = 'image/png';
+                else if (ext === 'gif') contentType = 'image/gif';
+                else if (ext === 'webp') contentType = 'image/webp';
+            }
+            
+            console.log('Uploading image to Firebase Storage...');
+            var uploadTask = await storageRef.child(fileName).putString(base64Data, 'base64', {
+                contentType: contentType
             });
+            
+            console.log('Image uploaded, getting download URL...');
             var downloadURL = await uploadTask.ref.getDownloadURL();
+            console.log('Image URL:', downloadURL);
+            
             newPhoto = downloadURL;
             photo = downloadURL;
         } catch (error) {
-            console.log("ERR ===", error);
+            console.error("Error uploading image to Firebase Storage:", error);
+            alert('Failed to upload image: ' + error.message);
+            throw error; // Re-throw to be caught by the calling function
         }
         return newPhoto;
     }
@@ -238,8 +306,27 @@
         }
         window.scrollTo(0, 0);
     } else {
+        // Check if Firebase is initialized before proceeding
+        if (!database || !storageRef) {
+            $(".error_top").show();
+            $(".error_top").html("");
+            $(".error_top").append("<p>Firebase is not initialized. Please refresh the page and check your Firebase configuration.</p>");
+            window.scrollTo(0, 0);
+            return;
+        }
+        
         var id = "<?php echo uniqid(); ?>";
+        
+        // Show loading indicator
+        jQuery("#data-table_processing").show();
+        
         storeImageData().then(IMG => {
+            if (!IMG || IMG === '') {
+                throw new Error('Image upload failed. Please try again.');
+            }
+            
+            console.log('Saving banner with image URL:', IMG);
+            
             database.collection('menu_items').doc(id).set({
                 'title': title,
                 'photo': IMG,
@@ -250,17 +337,23 @@
                 'redirect_type': redirect_type,
                 'redirect_id': redirect_id
             }).then(function(result) {
+                console.log('Banner saved successfully');
                 window.location.href = '{{ route("setting.banners")}}';
             }).catch(function(error) {
+                jQuery("#data-table_processing").hide();
+                console.error('Error saving banner:', error);
                 $(".error_top").show();
                 $(".error_top").html("");
-                $(".error_top").append("<p>" + error + "</p>");
+                $(".error_top").append("<p>Error saving banner: " + error.message + "</p>");
+                window.scrollTo(0, 0);
             });
         }).catch(function(error) {
             jQuery("#data-table_processing").hide();
+            console.error('Error uploading image:', error);
             $(".error_top").show();
             $(".error_top").html("");
-            $(".error_top").append("<p>" + error + "</p>");
+            $(".error_top").append("<p>Error uploading image: " + (error.message || error) + "</p>");
+            window.scrollTo(0, 0);
         });
     }
 });

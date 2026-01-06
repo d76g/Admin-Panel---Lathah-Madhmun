@@ -98,20 +98,122 @@
 @endsection
 @section('scripts')
 <script>
-    var database = firebase.firestore();
+    // Initialize Firebase-dependent variables safely
+    var database, storageRef, storage;
+    
+    // Wait for Firebase to be initialized
+    function initializeFirebaseServices() {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            try {
+                database = firebase.firestore();
+                storageRef = firebase.storage().ref('images');
+                storage = firebase.storage();
+                console.log('Firebase services initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Error initializing Firebase services:', error);
+                return false;
+            }
+        } else {
+            console.warn('Firebase not initialized yet, retrying...');
+            setTimeout(initializeFirebaseServices, 500);
+            return false;
+        }
+    }
+    
+    // Initialize on page load
+    $(document).ready(function() {
+        if (!initializeFirebaseServices()) {
+            setTimeout(function() {
+                if (!initializeFirebaseServices()) {
+                    console.error('Firebase initialization failed. Please check your Firebase configuration.');
+                    alert('Firebase is not properly configured. Banner images cannot be uploaded. Please check your Firebase settings.');
+                }
+            }, 1000);
+        }
+        
+        // Load banner data after Firebase is initialized
+        loadBannerData();
+    });
+    
     var photo = "";
     var fileName = "";
     var bannerImageFile = "";
     var placeholderImage = '';
-    var placeholder = database.collection('settings').doc('placeHolderImage');
-    placeholder.get().then(async function(snapshotsimage) {
-        var placeholderImageData = snapshotsimage.data();
-        placeholderImage = placeholderImageData.image;
-    })
-    var storageRef = firebase.storage().ref('images');
-    var storage = firebase.storage();
     var id = "<?php echo $id; ?>";
-    var ref = database.collection('menu_items').where("id", "==", id);
+    
+    // Load placeholder image and banner data after Firebase is initialized
+    function loadBannerData() {
+        if (!database) {
+            setTimeout(loadBannerData, 500);
+            return;
+        }
+        
+        // Load placeholder image
+        var placeholder = database.collection('settings').doc('placeHolderImage');
+        placeholder.get().then(async function(snapshotsimage) {
+            if (snapshotsimage.exists) {
+                var placeholderImageData = snapshotsimage.data();
+                placeholderImage = placeholderImageData.image;
+            }
+        }).catch(function(error) {
+            console.error('Error loading placeholder image:', error);
+        });
+        
+        // Load banner data
+        var ref = database.collection('menu_items').where("id", "==", id);
+        jQuery("#data-table_processing").show();
+        ref.get().then(async function(snapshots) {
+            if (snapshots.empty) {
+                console.error('Banner not found');
+                alert('Banner not found');
+                return;
+            }
+            var menuItems = snapshots.docs[0].data();
+            $(".title").val(menuItems.title);
+            $("#position").val(menuItems.position);
+            $(".set_order").val(menuItems.set_order);
+            $(".extlink").val(menuItems.redirect_id);
+            if (menuItems.is_publish) {
+                $("#is_publish").prop('checked', true);
+            }
+            if (menuItems.photo != '' && menuItems.photo != null) {
+                photo = menuItems.photo;
+                bannerImageFile = menuItems.photo;
+                $(".user_image").empty();
+                $(".user_image").append('<img class="rounded" style="width:50px" src="' + photo + '" alt="image">');
+            }
+            if (menuItems.hasOwnProperty('redirect_type')) {
+                var redirect_type = menuItems.redirect_type;
+                var redirect_id = menuItems.redirect_id;
+                if (redirect_type == "store") {
+                    $(".redirect_type[value='store']").prop('checked', true);
+                    getTypeWiseDetails('store', redirect_id);
+                    $('#vendor_div').show();
+                    $('#product_div').hide();
+                    $('#external_link_div').hide();
+                } else if (redirect_type == "product") {
+                    $(".redirect_type[value='product']").prop('checked', true);
+                    getTypeWiseDetails('product', redirect_id);
+                    $('#vendor_div').hide();
+                    $('#product_div').show();
+                    $('#external_link_div').hide();
+                } else if (redirect_type == "external_link") {
+                    $(".redirect_type[value='external_link']").prop('checked', true);
+                    $('#vendor_div').hide();
+                    $('#product_div').hide();
+                    $('#external_link_div').show();
+                    $(".extlink").val(redirect_id);
+                }
+            }
+            jQuery("#data-table_processing").hide();
+        }).catch(function(error) {
+            console.error('Error loading banner:', error);
+            jQuery("#data-table_processing").hide();
+            alert('Error loading banner: ' + error.message);
+        });
+    }
+    
     $("input[name='redirect_type']:radio").change(function() {
         var redirect_type = $(this).val();
         if (redirect_type == "store") {
@@ -130,9 +232,7 @@
             $('#external_link_div').show();
         }
     });
-    $(document).ready(function() {
-        jQuery("#data-table_processing").show();
-        ref.get().then(async function(snapshots) {
+    // Banner data loading is now handled in loadBannerData() function
             var menuItems = snapshots.docs[0].data();
             $(".title").val(menuItems.title);
             $("#position").val(menuItems.position);
