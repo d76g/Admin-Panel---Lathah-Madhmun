@@ -67,15 +67,57 @@
 @endsection
 @section('scripts')
 <script>
-var database = firebase.firestore();
-var storageRef = firebase.storage().ref('language');
-var ref = database.collection('settings').doc('languages');
+// Initialize Firebase-dependent variables safely
+var database, storageRef, ref;
 var languages=[];
 var photo = "";
 var fileName = "";
 var flagImageFile = '';
+
+// Wait for Firebase to be initialized
+function initializeFirebaseServices() {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        try {
+            database = firebase.firestore();
+            storageRef = firebase.storage().ref('language');
+            ref = database.collection('settings').doc('languages');
+            console.log('Firebase services initialized successfully');
+            console.log('Storage bucket:', firebase.app().options.storageBucket);
+            return true;
+        } catch (error) {
+            console.error('Error initializing Firebase services:', error);
+            return false;
+        }
+    } else {
+        console.warn('Firebase not initialized yet, retrying...');
+        setTimeout(initializeFirebaseServices, 500);
+        return false;
+    }
+}
+
 $(document).ready(function(){
-	ref.get().then( async function(snapshots){
+    // Initialize Firebase first
+    if (!initializeFirebaseServices()) {
+        setTimeout(function() {
+            if (!initializeFirebaseServices()) {
+                console.error('Firebase initialization failed. Please check your Firebase configuration.');
+                alert('Firebase is not properly configured. Language images cannot be uploaded. Please check your Firebase settings.');
+            } else {
+                loadLanguages();
+            }
+        }, 1000);
+    } else {
+        loadLanguages();
+    }
+});
+
+function loadLanguages() {
+    if (!ref) {
+        setTimeout(loadLanguages, 500);
+        return;
+    }
+    
+    ref.get().then( async function(snapshots){
 		snapshots=snapshots.data();
 		if (snapshots == undefined) {
             database.collection('settings').doc('languages').set({'list':''});
@@ -85,9 +127,20 @@ $(document).ready(function(){
 				languages=snapshots;
 			}
 		}
-	});
-});
+	}).catch(function(error) {
+        console.error('Error loading languages:', error);
+    });
+}
+
 $(".save-setting-btn").click(function(){
+    // Check if Firebase is initialized before proceeding
+    if (!database || !storageRef) {
+        $(".error_top").show();
+        $(".error_top").html("");
+        $(".error_top").append("<p>Firebase is not initialized. Please refresh the page and check your Firebase configuration.</p>");
+        window.scrollTo(0, 0);
+        return;
+    }
 	var title = $("#title").val();
 	var slug = $("#slug").val();
 	var active = $(".is_active").is(":checked");
@@ -155,18 +208,57 @@ function handleFileSelect(evt) {
 }
 async function storeImageData() {
 	var newPhoto = '';
+	
+	// Check if Firebase Storage is available
+	if (!storageRef) {
+		console.error('Firebase Storage is not initialized');
+		alert('Firebase Storage is not available. Please check your Firebase configuration.');
+		throw new Error('Firebase Storage not initialized');
+	}
+	
+	if (!photo || photo === '') {
+		console.error('No image selected');
+		throw new Error('No image selected');
+	}
+	
 	try {
 		if (photo != flagImageFile) {
-			photo = photo.replace(/^data:image\/[a-z]+;base64,/, "")
-			var uploadTask = await storageRef.child(fileName).putString(photo, 'base64', {contentType: 'image/jpg'});
+			// Remove data URL prefix if present
+			var base64Data = photo.replace(/^data:image\/[a-z]+;base64,/, "");
+			
+			if (!base64Data) {
+				throw new Error('Invalid image data');
+			}
+			
+			// Determine content type from file extension or default to jpeg
+			var contentType = 'image/jpeg';
+			if (fileName) {
+				var ext = fileName.split('.').pop().toLowerCase();
+				if (ext === 'png') contentType = 'image/png';
+				else if (ext === 'gif') contentType = 'image/gif';
+				else if (ext === 'webp') contentType = 'image/webp';
+			}
+			
+			console.log('Uploading language image to Firebase Storage...');
+			console.log('Storage bucket:', firebase.app().options.storageBucket);
+			
+			var uploadTask = await storageRef.child(fileName).putString(base64Data, 'base64', {
+				contentType: contentType
+			});
+			
+			console.log('Image uploaded, getting download URL...');
 			var downloadURL = await uploadTask.ref.getDownloadURL();
+			console.log('Image URL:', downloadURL);
+			
 			newPhoto = downloadURL;
 			photo = downloadURL;
 		} else {
 			newPhoto = photo;
 		}
 	} catch (error) {
-		console.log("ERR ===", error);
+		console.error("Error uploading image to Firebase Storage:", error);
+		alert('Failed to upload image: ' + error.message);
+		throw error;
 	}
 	return newPhoto;
 }

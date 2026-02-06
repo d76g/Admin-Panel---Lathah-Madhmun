@@ -4,7 +4,7 @@
 
 
 
- 
+
 
 return [
 
@@ -54,7 +54,7 @@ return [
 
     'admin_table_text'=>'View and manage all the admin users',
 
-    'role_table_text'=>'View and manage all the roles', 
+    'role_table_text'=>'View and manage all the roles',
 
 
 
@@ -192,23 +192,23 @@ return [
 
     'app_setting_enable_xendit' => 'Enable Xendit',
 
-    
+
 
     'app_setting_enable_xendit_help' => 'Check it to enable Xendit payment method',
 
-    
+
 
     'app_setting_enable_orangepay' => 'Enable OrangePay',
 
-    
+
 
     'app_setting_enable_orangepay_help' => 'Check it to enable OrangePay payment method',
 
-    
+
 
     'app_setting_enable_midtrans' => 'Enable MidTrans',
 
-    
+
 
     'app_setting_enable_midtrans_help' => 'Check it to enable MidTrans payment method',
 
@@ -216,71 +216,71 @@ return [
 
     'app_setting_midtrans_serverkey' => 'MidTrans Server Key',
 
-    
+
 
     'app_setting_midtrans_serverkey_help' => 'Insert MidTrans Server Key',
 
-    
+
 
     'app_setting_xendit_key' => 'Xendit Key',
 
-    
+
 
     'app_setting_xendit_key_help' => 'Insert Xendit Key',
 
-    
+
 
     'app_setting_orangepay_merchantKey' => 'OrangePay Merchant Key',
 
-    
+
 
     'app_setting_orangepay_merchantKey_help' => 'Insert OrangePay Merchant Key',
 
-    
+
 
     'app_setting_orangepay_auth' => 'OrangePay Auth',
 
-    
+
 
     'app_setting_orangepay_auth_help' => 'Insert OrangePay Auth',
 
-    
+
 
     'app_setting_orangepay_clientid' => 'OrangePay ClientId',
 
-    
+
 
     'app_setting_orangepay_clientid_help' => 'Insert OrangePay ClientId',
 
-    
+
 
     'app_setting_orangepay_secret' => 'OrangePay Secret',
 
-    
+
 
     'app_setting_orangepay_secret_help' => 'Insert OrangePay Secret',
 
-    
+
 
     'app_setting_orangepay_cancelurl' => 'OrangePay CancelUrl',
 
-    
+
 
     'app_setting_orangepay_cancelurl_help' => 'Insert OrangePay CancelUrl',
 
-    
+
 
     'app_setting_orangepay_notifyurl' => 'OrangePay NotifyUrl',
 
-    
+
 
     'app_setting_orangepay_notifyurl_help' => 'Insert OrangePay NotifyUrl',
 
-    
+
 
     'app_setting_orangepay_returnurl' => 'OrangePay ReturnUrl',
 
-    
+
 
     'app_setting_orangepay_returnurl_help' => 'Insert OrangePay ReturnUrl',
 
@@ -288,11 +288,11 @@ return [
 
     'app_setting_xendit' => 'Xendit',
 
-    
+
 
     'app_setting_orangepay' => 'OrangePay',
 
-    
+
 
     'app_setting_midtrans' => 'MidTrans',
 
@@ -304,7 +304,7 @@ return [
 
     'app_setting_enable_twitter_help' => 'Check it to use twitter as login method',
 
-    
+
 
 
 
@@ -812,7 +812,7 @@ return [
 
 
 
-    'dashboard' => 'Dashboard',
+    'dashboard' => 'الرئسية',
 
 
 
@@ -4268,7 +4268,7 @@ return [
 
 
 
-    'document_verification_is_pending' => 'Document verification is pending, Please first verify your documents.',  
+    'document_verification_is_pending' => 'Document verification is pending, Please first verify your documents.',
 
 
 
