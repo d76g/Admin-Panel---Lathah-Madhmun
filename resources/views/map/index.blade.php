@@ -56,8 +56,8 @@
             vertical-align: middle;
         }
     </style>
-    @endsection
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    @endsection
     @section('scripts')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="text/javascript">
@@ -318,7 +318,7 @@
                             html += '<div class="live-tracking-inner">';
                             html += '<span class="listicon"></span>';
                             html += '<h3 class="drier-name">{{trans("lang.driver_name")}} : <span class="dvrname">' + driver.firstName + ' ' + driver.lastName + '</span></h3>';
-                            html += '<span class="badge badge-success">Available<span>';
+                            html += '<span class="badge badge-success">Available</span>';
                             html += '</div>';
                             html += '</div>';
                         }
@@ -377,6 +377,8 @@
                     }
                 }
             }
+        }
+
         async function locationUpdate(marker, driver) {
             if (!database) {
                 console.error('Database not initialized in locationUpdate');
