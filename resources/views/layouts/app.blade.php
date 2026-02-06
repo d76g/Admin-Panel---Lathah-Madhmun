@@ -661,37 +661,100 @@
 
 
 <script type="text/javascript">
-
-
+// Firebase configuration from server (more reliable than cookies)
+var firebaseConfigFromServer = {
+    apiKey: "{{ env('FIREBASE_APIKEY') }}",
+    authDomain: "{{ env('FIREBASE_AUTH_DOMAIN') }}",
+    databaseURL: "{{ env('FIREBASE_DATABASE_URL') }}",
+    projectId: "{{ env('FIREBASE_PROJECT_ID') }}",
+    storageBucket: "{{ env('FIREBASE_STORAGE_BUCKET') }}",
+    messagingSenderId: "{{ env('FIREBASE_MESSAAGING_SENDER_ID') }}",
+    appId: "{{ env('FIREBASE_APP_ID') }}",
+    measurementId: "{{ env('FIREBASE_MEASUREMENT_ID') }}"
+};
 
 var is_disable_delete = "<?php echo env('IS_DISABLE_DELETE', 0); ?>";
 
-
-
 var doNotDeleteAlert = '{{trans("lang.do_not_delete")}}';
 
-
-
 var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
-
-
 
     // Initialize Firebase-dependent variables safely
     var database, geoFirestore, createdAt, createdAtman, languages_list_main = [];
     
-    try {
-        // Check if Firebase is initialized before using it
-        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-            database = firebase.firestore();
-            geoFirestore = new GeoFirestore(database);
-            createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
-            createdAt = {_nanoseconds: createdAtman.nanoseconds, _seconds: createdAtman.seconds};
-        } else {
-            console.warn('Firebase is not initialized. Some features may not work. Please check your Firebase configuration in .env file.');
+    // Initialize Firebase using server config (fallback to cookies if server config incomplete)
+    function initializeFirebaseFromConfig() {
+        if (typeof firebase === 'undefined') {
+            console.warn('Firebase SDK not loaded yet');
+            setTimeout(initializeFirebaseFromConfig, 500);
+            return;
         }
-    } catch (error) {
-        console.error('Error initializing Firebase:', error);
+        
+        try {
+            var apps = firebase.apps || [];
+            if (apps.length === 0) {
+                // Try server config first
+                var config = null;
+                if (firebaseConfigFromServer.apiKey && firebaseConfigFromServer.authDomain && firebaseConfigFromServer.projectId) {
+                    config = firebaseConfigFromServer;
+                    console.log('Using Firebase config from server');
+                } else {
+                    // Fallback to cookies
+                    var cookieConfig = {
+                        apiKey: getDecryptedCookie('XSRF-TOKEN-AK'),
+                        authDomain: getDecryptedCookie('XSRF-TOKEN-AD'),
+                        databaseURL: getDecryptedCookie('XSRF-TOKEN-DU'),
+                        projectId: getDecryptedCookie('XSRF-TOKEN-PI'),
+                        storageBucket: getDecryptedCookie('XSRF-TOKEN-SB'),
+                        messagingSenderId: getDecryptedCookie('XSRF-TOKEN-MS'),
+                        appId: getDecryptedCookie('XSRF-TOKEN-AI'),
+                        measurementId: getDecryptedCookie('XSRF-TOKEN-MI')
+                    };
+                    if (cookieConfig.apiKey && cookieConfig.authDomain && cookieConfig.projectId) {
+                        config = cookieConfig;
+                        console.log('Using Firebase config from cookies');
+                    }
+                }
+                
+                if (config && config.apiKey && config.authDomain && config.projectId && config.storageBucket) {
+                    firebase.initializeApp(config);
+                    console.log('Firebase initialized successfully');
+                    console.log('Project ID:', config.projectId);
+                    console.log('Storage Bucket:', config.storageBucket);
+                    
+                    database = firebase.firestore();
+                    geoFirestore = new GeoFirestore(database);
+                    createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
+                    createdAt = {_nanoseconds: createdAtman.nanoseconds, _seconds: createdAtman.seconds};
+                    
+                    // Trigger custom event
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('firebaseInitialized'));
+                    }
+                    
+                    // Load Firebase-dependent data
+                    loadFirebaseData();
+                } else {
+                    console.error('Firebase configuration incomplete. Missing required values.');
+                }
+            } else {
+                console.log('Firebase already initialized');
+                database = firebase.firestore();
+                geoFirestore = new GeoFirestore(database);
+                createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
+                createdAt = {_nanoseconds: createdAtman.nanoseconds, _seconds: createdAtman.seconds};
+                loadFirebaseData();
+            }
+        } catch (error) {
+            console.error('Error initializing Firebase:', error);
+        }
     }
+    
+    function loadFirebaseData() {
+        if (!database) {
+            console.warn('Database not available');
+            return;
+        }
     
     // Only proceed with Firebase operations if database is available
     if (database) {
@@ -801,7 +864,18 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         }
 
     });
+    
+    // Load notification settings
+    loadNotificationSettings();
+    
     } // End of if (database) block for initial Firebase setup
+    
+    // Start Firebase initialization
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeFirebaseFromConfig);
+    } else {
+        initializeFirebaseFromConfig();
+    }
 
 
 
@@ -1319,54 +1393,48 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         return checkFlag;
 
     }
-
-
-
-    database.collection('settings').doc("notification_setting").get().then(async function (snapshots) {
-
-        var data = snapshots.data();
-
-        if(data != undefined){
-
-            serviceJson = data.serviceJson;
-
-            if(serviceJson != '' && serviceJson != null){
-
-                $.ajax({
-
-                    type: 'POST',
-
-                    data: {
-
-                        serviceJson: btoa(serviceJson),
-
-                    },
-
-                    url: "{{ route('store-firebase-service') }}",
-
-                    headers: {
-
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-
-                    },
-
-                    success: function (data) {
-
-                    }
-
-                });
-
-            }
-
+    
+    // Load notification settings - moved to loadFirebaseData function
+    function loadNotificationSettings() {
+        if (!database) {
+            console.warn('Database not available for notification settings');
+            return;
         }
-
-    });
+        
+        database.collection('settings').doc("notification_setting").get().then(async function (snapshots) {
+            var data = snapshots.data();
+            if(data != undefined){
+                serviceJson = data.serviceJson;
+                if(serviceJson != '' && serviceJson != null){
+                    $.ajax({
+                        type: 'POST',
+                        data: {
+                            serviceJson: btoa(serviceJson),
+                        },
+                        url: "{{ route('store-firebase-service') }}",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function (data) {
+                        }
+                    });
+                }
+            }
+        }).catch(function(error) {
+            console.error('Error loading notification settings:', error);
+        });
+    }
 
 
 
          //On delete item delete image also from bucket general code
 
          const deleteDocumentWithImage = async (collection, id, singleImageField, arrayImageField) => {
+            // Check if Firebase is initialized
+            if (!database) {
+                console.error('Firebase not initialized. Cannot delete document with image.');
+                return;
+            }
 
             // Reference to the Firestore document
 

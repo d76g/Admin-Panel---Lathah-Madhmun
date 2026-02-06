@@ -770,7 +770,20 @@
 
             });
 
-        getTotalEarnings();
+        // Only call getTotalEarnings if db is initialized
+        if (db) {
+            getTotalEarnings();
+        } else {
+            // Wait for Firebase and retry
+            setTimeout(function() {
+                if (db) getTotalEarnings();
+            }, 1000);
+        }
+
+        if (!db) {
+            console.warn('db not initialized, skipping order status queries');
+            return;
+        }
 
         db.collection('restaurant_orders').where('status', 'in', ["Order Placed"]).get().then(
 
@@ -1146,6 +1159,13 @@
 
         var currentYear = new Date().getFullYear();
 
+        // Check if Firebase is initialized
+        if (!db) {
+            console.warn('Firebase not initialized in getTotalEarnings, retrying...');
+            setTimeout(getTotalEarnings, 1000);
+            return;
+        }
+
         await db.collection('restaurant_orders').where('status', 'in', ["Order Completed"]).get().then(async function (orderSnapshots) {
 
             var paymentData = orderSnapshots.docs;
@@ -1360,6 +1380,16 @@
 
                     var datas = new Date(orderData.createdAt._seconds * 1000);
 
+                    if (!db) {
+                        console.error('Firebase not initialized, cannot update order');
+                        return;
+                    }
+                    
+                    if (!db) {
+                        console.error('Firebase not initialized, cannot update order');
+                        return;
+                    }
+                    
                     var dates = firebase.firestore.Timestamp.fromDate(datas);
 
                     db.collection('restaurant_orders').doc(orderData.id).update({'createdAt': dates}).then(() => {

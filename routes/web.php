@@ -593,3 +593,35 @@ Route::middleware(['permission:supportHistory,supportHistory.list'])->group(func
 Route::middleware(['permission:vendors,vendors.chat'])->group(function () {
         Route::get('/vendors/chat/{id}', [App\Http\Controllers\StoreController::class, 'vendorChat'])->name('vendors.chat');
 });
+
+// Test route to verify Firebase cookies (remove in production)
+Route::get('/test-firebase-cookies', function() {
+    $cookies = [
+        'XSRF-TOKEN-AK' => env('FIREBASE_APIKEY'),
+        'XSRF-TOKEN-AD' => env('FIREBASE_AUTH_DOMAIN'),
+        'XSRF-TOKEN-DU' => env('FIREBASE_DATABASE_URL'),
+        'XSRF-TOKEN-PI' => env('FIREBASE_PROJECT_ID'),
+        'XSRF-TOKEN-SB' => env('FIREBASE_STORAGE_BUCKET'),
+        'XSRF-TOKEN-MS' => env('FIREBASE_MESSAAGING_SENDER_ID'),
+        'XSRF-TOKEN-AI' => env('FIREBASE_APP_ID'),
+        'XSRF-TOKEN-MI' => env('FIREBASE_MEASUREMENT_ID'),
+    ];
+    
+    $result = [];
+    foreach ($cookies as $name => $value) {
+        $result[$name] = [
+            'env_exists' => !empty($value),
+            'env_value_preview' => $value ? substr($value, 0, 20) . '...' : 'EMPTY',
+            'cookie_set' => isset($_COOKIE[$name]),
+            'cookie_value_preview' => isset($_COOKIE[$name]) ? substr($_COOKIE[$name], 0, 20) . '...' : 'NOT SET'
+        ];
+    }
+    
+    return response()->json([
+        'headers_sent' => headers_sent(),
+        'running_in_console' => app()->runningInConsole(),
+        'cookies' => $result,
+        'php_version' => PHP_VERSION,
+        'php_version_id' => PHP_VERSION_ID
+    ]);
+});

@@ -90,8 +90,8 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
-    var database = firebase.firestore();
-    var ref = database.collection('users').where("role", "in", ["customer"]);
+    // Initialize Firebase-dependent variables safely
+    var database, ref;
     var placeholderImage = '';
     var user_permissions = '<?php echo @session("user_permissions")?>';
     user_permissions = Object.values(JSON.parse(user_permissions));
@@ -99,65 +99,180 @@
     if ($.inArray('user.delete', user_permissions) >= 0) {
         checkDeletePermission = true;
     }
-    $('.status_selector').select2({
-        placeholder: '{{trans("lang.status")}}',  
-        minimumResultsForSearch: Infinity,
-        allowClear: true 
-    });
-    $('select').on("select2:unselecting", function(e) {
-        var self = $(this);
-        setTimeout(function() {
-            self.select2('close');
-        }, 0);
-    });
+    
+    // Wait for Firebase to be initialized
+    function initializeUsersFirebase() {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            try {
+                database = firebase.firestore();
+                ref = database.collection('users').where("role", "in", ["customer"]);
+                console.log('Users page Firebase initialized successfully');
+                initializeUsersPage();
+                return true;
+            } catch (error) {
+                console.error('Error initializing Firebase in users page:', error);
+                return false;
+            }
+        } else {
+            console.warn('Firebase not initialized yet in users page, retrying...');
+            setTimeout(initializeUsersFirebase, 500);
+            return false;
+        }
+    }
+    
+    function initializeUsersPage() {
+        if (!database || !ref) {
+            console.error('Firebase not initialized in initializeUsersPage');
+            return;
+        }
+        
+        // Load placeholder image
+        var placeholder = database.collection('settings').doc('placeHolderImage');
+        placeholder.get().then(async function (snapshotsimage) {
+            if (snapshotsimage.exists) {
+                var placeholderImageData = snapshotsimage.data();
+                placeholderImage = placeholderImageData.image;
+            }
+        }).catch(function(error) {
+            console.error('Error loading placeholder image:', error);
+        });
+        
+        // Initialize DataTable and other components
+        initializeDataTable();
+        initializeDataTableContent();
+        
+        // Set up filtered records handler after Firebase is ready
+        setupFilteredRecordsHandler();
+    }
+    
+    function initializeDataTable() {
+        if (!ref) {
+            console.error('ref not initialized');
+            return;
+        }
+        
+        // Initialize select2
+        $('.status_selector').select2({
+            placeholder: '{{trans("lang.status")}}',  
+            minimumResultsForSearch: Infinity,
+            allowClear: true 
+        });
+        $('select').on("select2:unselecting", function(e) {
+            var self = $(this);
+            setTimeout(function() {
+                self.select2('close');
+            }, 0);
+        });
+        
+        // Set up date picker (but don't trigger change events yet)
+        setDate();
+    }
+    
     function setDate() {
         $('#daterange span').html('{{trans("lang.select_range")}}');
         $('#daterange').daterangepicker({
             autoUpdateInput: false, 
         }, function (start, end) {
             $('#daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-            $('.filteredRecords').trigger('change'); 
+            // Only trigger change if Firebase is ready
+            if (database && ref) {
+                $('.filteredRecords').trigger('change'); 
+            }
         });
         $('#daterange').on('apply.daterangepicker', function (ev, picker) {
             $('#daterange span').html(picker.startDate.format('MMMM D, YYYY') + ' - ' + picker.endDate.format('MMMM D, YYYY'));
-            $('.filteredRecords').trigger('change');
+            // Only trigger change if Firebase is ready
+            if (database && ref) {
+                $('.filteredRecords').trigger('change');
+            }
         });
         $('#daterange').on('cancel.daterangepicker', function (ev, picker) {
             $('#daterange span').html('{{trans("lang.select_range")}}');
-            $('.filteredRecords').trigger('change'); 
+            // Only trigger change if Firebase is ready
+            if (database && ref) {
+                $('.filteredRecords').trigger('change'); 
+            }
         });
     }
-    setDate(); 
-    $('.filteredRecords').change(async function() {
-        var status = $('.status_selector').val();
-        var daterangepicker = $('#daterange').data('daterangepicker');
-        ref = database.collection('users').where("role", "in", ["customer"]);
-        if ($('#daterange span').html() != '{{trans("lang.select_range")}}' && daterangepicker) {
-            var from = moment(daterangepicker.startDate).toDate();
-            var to = moment(daterangepicker.endDate).toDate();
-            if (from && to) { 
-                var fromDate = firebase.firestore.Timestamp.fromDate(new Date(from));
-                ref = ref.where('createdAt', '>=', fromDate);
-                var toDate = firebase.firestore.Timestamp.fromDate(new Date(to));
-                ref = ref.where('createdAt', '<=', toDate);
+    
+    // Set up the change handler - this will be called after Firebase is initialized
+    function setupFilteredRecordsHandler() {
+        $('.filteredRecords').off('change').on('change', async function() {
+            if (!database || !ref) {
+                console.error('Firebase not initialized in filteredRecords handler');
+                return;
             }
-        }
-        if (status) {
-            ref = (status == "active") ? ref.where('active', '==', true) : ref.where('active', '==', false);
-        }
-        $('#userTable').DataTable().ajax.reload();
-    });
+            var status = $('.status_selector').val();
+            var daterangepicker = $('#daterange').data('daterangepicker');
+            ref = database.collection('users').where("role", "in", ["customer"]);
+            
+            if ($('#daterange span').html() != '{{trans("lang.select_range")}}' && daterangepicker) {
+                var from = moment(daterangepicker.startDate).toDate();
+                var to = moment(daterangepicker.endDate).toDate();
+                if (from && to) { 
+                    var fromDate = firebase.firestore.Timestamp.fromDate(new Date(from));
+                    ref = ref.where('createdAt', '>=', fromDate);
+                    var toDate = firebase.firestore.Timestamp.fromDate(new Date(to));
+                    ref = ref.where('createdAt', '<=', toDate);
+                }
+            }
+            
+            if (status) {
+                ref = (status == "active") ? ref.where('active', '==', true) : ref.where('active', '==', false);
+            }
+            
+            if ($('#userTable').DataTable()) {
+                $('#userTable').DataTable().ajax.reload();
+            }
+        });
+    }
+    
+    // Start waiting for Firebase when page loads
     $(document).ready(function () {
         $(document.body).on('click', '.redirecttopage', function () {
             var url = $(this).attr('data-url');
             window.location.href = url;
         });
+        
+        // Show loading indicator
         jQuery("#data-table_processing").show();
-        var placeholder = database.collection('settings').doc('placeHolderImage');
-        placeholder.get().then(async function (snapshotsimage) {
-            var placeholderImageData = snapshotsimage.data();
-            placeholderImage = placeholderImageData.image;
+        
+        // Listen for Firebase initialization event
+        window.addEventListener('firebaseInitialized', function() {
+            console.log('Received firebaseInitialized event in users page');
+            initializeUsersFirebase();
         });
+        
+        // Start waiting for Firebase
+        function waitForFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                if (initializeUsersFirebase()) {
+                    return; // Success
+                }
+            }
+            
+            // If not ready, wait and retry (max 10 seconds)
+            var attempts = (waitForFirebase.attempts || 0) + 1;
+            waitForFirebase.attempts = attempts;
+            
+            if (attempts < 20) { // 20 attempts * 500ms = 10 seconds max
+                setTimeout(waitForFirebase, 500);
+            } else {
+                console.error('Firebase initialization timeout in users page');
+                jQuery("#data-table_processing").hide();
+            }
+        }
+        
+        waitForFirebase();
+    });
+    
+    // Initialize DataTable after Firebase is ready
+    function initializeDataTableContent() {
+        if (!ref) {
+            console.error('ref not initialized in initializeDataTableContent');
+            return;
+        }
+        
         $(document).on('click', '.dt-button-collection .dt-button', function () {
             $('.dt-button-collection').hide();
             $('.dt-button-background').hide();
@@ -179,8 +294,8 @@
         };
         const table = $('#userTable').DataTable({
             pageLength: 10,
-            processing: false, // Show processing indicator
-            serverSide: true, // Enable server-side processing
+            processing: false,
+            serverSide: true,
             responsive: true,
             ajax: function (data, callback, settings) {
                 const start = data.start;
@@ -189,10 +304,24 @@
                 const orderColumnIndex = data.order[0].column;
                 const orderDirection = data.order[0].dir;
                 const orderableColumns = (checkDeletePermission)? ['','fullName', 'email', 'createdAt','','',''] : ['fullName', 'email', 'createdAt','','',''];
-                const orderByField = orderableColumns[orderColumnIndex]; // Adjust the index to match your table
+                const orderByField = orderableColumns[orderColumnIndex];
                 if (searchValue.length >= 3 || searchValue.length === 0) {
                     $('#data-table_processing').show();
                 }
+                
+                if (!ref) {
+                    console.error('ref not initialized in DataTable ajax');
+                    $('#data-table_processing').hide();
+                    callback({
+                        draw: data.draw,
+                        recordsTotal: 0,
+                        recordsFiltered: 0,
+                        filteredData: [],
+                        data: []
+                    });
+                    return;
+                }
+                
                 ref.orderBy('createdAt', 'desc').get().then(async function (querySnapshot) {
                     if (querySnapshot.empty) {
                         $('.total_count').text(0); 
@@ -403,6 +532,11 @@
         }
     });
     async function deleteUserData(userId) {
+        if (!database) {
+            console.error('Firebase not initialized in deleteUserData');
+            return;
+        }
+        
         await database.collection('wallet').where('user_id', '==', userId).get().then(async function (snapshotsItem) {
             if (snapshotsItem.docs.length > 0) {
                 snapshotsItem.docs.forEach((temData) => {
@@ -459,6 +593,11 @@
     });
     $(document).on("click", "input[name='isActive']", function (e) {
         var ischeck = $(this).is(':checked');
+        if (!database) {
+            console.error('Firebase not initialized');
+            return;
+        }
+        
         var id = this.id;
         if (ischeck) {
             database.collection('users').doc(id).update({'active': true}).then(function (result) {
