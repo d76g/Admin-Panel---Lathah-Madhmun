@@ -670,21 +670,31 @@
 
     var decimal_degits = 0;
 
-    var refCurrency = database.collection('currencies').where('isActive', '==', true);
+    var placeholderImage = '';
+
+    var refCurrency = db.collection('currencies').where('isActive', '==', true);
 
     refCurrency.get().then(async function (snapshots) {
 
-        var currencyData = snapshots.docs[0].data();
+        if (snapshots.docs && snapshots.docs.length > 0) {
 
-        currentCurrency = currencyData.symbol;
+            var currencyData = snapshots.docs[0].data();
 
-        currencyAtRight = currencyData.symbolAtRight;
+            currentCurrency = currencyData.symbol;
 
-        if (currencyData.decimal_degits) {
+            currencyAtRight = currencyData.symbolAtRight;
 
-            decimal_degits = currencyData.decimal_degits;
+            if (currencyData.decimal_degits) {
+
+                decimal_degits = currencyData.decimal_degits;
+
+            }
 
         }
+
+    }).catch(function(error) {
+
+        console.error('Error loading currency:', error);
 
     });
 
@@ -814,11 +824,23 @@
 
         placeholder.get().then(async function (snapshotsimage) {
 
-            var placeholderImageData = snapshotsimage.data();
+            if (snapshotsimage.exists) {
 
-            placeholderImage = placeholderImageData.image;
+                var placeholderImageData = snapshotsimage.data();
 
-        })
+                if (placeholderImageData && placeholderImageData.image) {
+
+                    placeholderImage = placeholderImageData.image;
+
+                }
+
+            }
+
+        }).catch(function(error) {
+
+            console.error('Error loading placeholder image:', error);
+
+        });
 
         var offest = 1;
 
@@ -896,7 +918,7 @@
 
         var append_listrecent_order = document.getElementById('append_list_recent_order');
 
-        append_list.innerHTML = '';
+        append_listrecent_order.innerHTML = '';
 
         ref = db.collection('restaurant_orders');
 
@@ -1584,7 +1606,7 @@
 
     function getRestaurantName(vendorId) {
 
-        database.collection('vendors').doc(vendorId).get().then(async function (snapshots) {
+        db.collection('vendors').doc(vendorId).get().then(async function (snapshots) {
 
             if(snapshots.exists){
 
@@ -1644,7 +1666,7 @@
 
             html = html + '<td data-url="' + route + '" class="redirecttopage"><i class="fa fa-shopping-cart"></i> ' + quan + '</td>';
 
-            html = html + '</a></tr>';
+            html = html + '</tr>';
 
             count++;
 
