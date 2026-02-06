@@ -75,12 +75,17 @@ var fileName = "";
 var flagImageFile = '';
 
 // Wait for Firebase to be initialized
+<<<<<<< HEAD
 function initializeFirebaseServices() {
+=======
+function initializeLanguageFirebase() {
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
     if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
         try {
             database = firebase.firestore();
             storageRef = firebase.storage().ref('language');
             ref = database.collection('settings').doc('languages');
+<<<<<<< HEAD
             console.log('Firebase services initialized successfully');
             console.log('Storage bucket:', firebase.app().options.storageBucket);
             return true;
@@ -91,10 +96,31 @@ function initializeFirebaseServices() {
     } else {
         console.warn('Firebase not initialized yet, retrying...');
         setTimeout(initializeFirebaseServices, 500);
+=======
+            
+            // Log the storage bucket being used
+            var app = firebase.app();
+            var config = app.options;
+            console.log('Language page Firebase initialized successfully');
+            console.log('Storage Bucket:', config.storageBucket);
+            console.log('Project ID:', config.projectId);
+            
+            // Load languages list
+            loadLanguagesList();
+            return true;
+        } catch (error) {
+            console.error('Error initializing Firebase in language page:', error);
+            return false;
+        }
+    } else {
+        console.warn('Firebase not initialized yet in language page, retrying...');
+        setTimeout(initializeLanguageFirebase, 500);
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         return false;
     }
 }
 
+<<<<<<< HEAD
 $(document).ready(function(){
     // Initialize Firebase first
     if (!initializeFirebaseServices()) {
@@ -114,10 +140,16 @@ $(document).ready(function(){
 function loadLanguages() {
     if (!ref) {
         setTimeout(loadLanguages, 500);
+=======
+function loadLanguagesList() {
+    if (!ref) {
+        console.error('ref not initialized');
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         return;
     }
     
     ref.get().then( async function(snapshots){
+<<<<<<< HEAD
 		snapshots=snapshots.data();
 		if (snapshots == undefined) {
             database.collection('settings').doc('languages').set({'list':''});
@@ -128,10 +160,23 @@ function loadLanguages() {
 			}
 		}
 	}).catch(function(error) {
+=======
+        snapshots=snapshots.data();
+        if (snapshots == undefined) {
+            database.collection('settings').doc('languages').set({'list':''});
+        } else {
+            snapshots=snapshots.list;
+            if(snapshots.length){
+                languages=snapshots;
+            }
+        }
+    }).catch(function(error) {
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         console.error('Error loading languages:', error);
     });
 }
 
+<<<<<<< HEAD
 $(".save-setting-btn").click(function(){
     // Check if Firebase is initialized before proceeding
     if (!database || !storageRef) {
@@ -141,6 +186,45 @@ $(".save-setting-btn").click(function(){
         window.scrollTo(0, 0);
         return;
     }
+=======
+$(document).ready(function(){
+    // Listen for Firebase initialization event
+    window.addEventListener('firebaseInitialized', function() {
+        console.log('Received firebaseInitialized event in language create page');
+        initializeLanguageFirebase();
+    });
+    
+    // Start waiting for Firebase
+    function waitForFirebase() {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            if (initializeLanguageFirebase()) {
+                return; // Success
+            }
+        }
+        
+        // If not ready, wait and retry (max 10 seconds)
+        var attempts = (waitForFirebase.attempts || 0) + 1;
+        waitForFirebase.attempts = attempts;
+        
+        if (attempts < 20) { // 20 attempts * 500ms = 10 seconds max
+            setTimeout(waitForFirebase, 500);
+        } else {
+            console.error('Firebase initialization timeout in language create page');
+        }
+    }
+    
+    waitForFirebase();
+});
+$(".save-setting-btn").click(function(){
+	if (!database || !storageRef) {
+		$(".error_top").show();
+		$(".error_top").html("");
+		$(".error_top").append("<p>Firebase is not initialized. Please wait a moment and try again.</p>");
+		window.scrollTo(0, 0);
+		return;
+	}
+	
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
 	var title = $("#title").val();
 	var slug = $("#slug").val();
 	var active = $(".is_active").is(":checked");
@@ -171,9 +255,15 @@ $(".save-setting-btn").click(function(){
 			database.collection('settings').doc('languages').update({'list':languages}).then(function(result) {
 				jQuery("#data-table_processing").hide();
 				window.location.href = '{{ route("settings.app.languages") }}';
+			}).catch(function(error) {
+				jQuery("#data-table_processing").hide();
+				$(".error_top").show();
+				$(".error_top").html("");
+				$(".error_top").append("<p>Error saving language: " + error.message + "</p>");
+				window.scrollTo(0, 0);
 			});
 		}).catch(err => {
-			jQuery("#overlay").hide();
+			jQuery("#data-table_processing").hide();
 			$(".error_top").show();
 			$(".error_top").html("");
 			$(".error_top").append("<p>" + err + "</p>");
@@ -207,6 +297,14 @@ function handleFileSelect(evt) {
 	reader.readAsDataURL(f);
 }
 async function storeImageData() {
+	if (!storageRef) {
+		throw new Error('Firebase Storage is not initialized. Please wait a moment and try again.');
+	}
+	
+	if (!photo) {
+		throw new Error('No image selected');
+	}
+	
 	var newPhoto = '';
 	
 	// Check if Firebase Storage is available
@@ -223,6 +321,7 @@ async function storeImageData() {
 	
 	try {
 		if (photo != flagImageFile) {
+<<<<<<< HEAD
 			// Remove data URL prefix if present
 			var base64Data = photo.replace(/^data:image\/[a-z]+;base64,/, "");
 			
@@ -250,15 +349,42 @@ async function storeImageData() {
 			var downloadURL = await uploadTask.ref.getDownloadURL();
 			console.log('Image URL:', downloadURL);
 			
+=======
+			photo = photo.replace(/^data:image\/[a-z]+;base64,/, "")
+			
+			// Detect content type from original file
+			var contentType = 'image/jpeg'; // default
+			if (fileName.toLowerCase().endsWith('.png')) {
+				contentType = 'image/png';
+			} else if (fileName.toLowerCase().endsWith('.gif')) {
+				contentType = 'image/gif';
+			} else if (fileName.toLowerCase().endsWith('.webp')) {
+				contentType = 'image/webp';
+			}
+			
+			console.log('Uploading image to Firebase Storage...');
+			console.log('Storage bucket:', firebase.app().options.storageBucket);
+			console.log('File name:', fileName);
+			console.log('Content type:', contentType);
+			
+			var uploadTask = await storageRef.child(fileName).putString(photo, 'base64', {contentType: contentType});
+			var downloadURL = await uploadTask.ref.getDownloadURL();
+			console.log('Image uploaded successfully:', downloadURL);
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
 			newPhoto = downloadURL;
 			photo = downloadURL;
 		} else {
 			newPhoto = photo;
 		}
 	} catch (error) {
+<<<<<<< HEAD
 		console.error("Error uploading image to Firebase Storage:", error);
 		alert('Failed to upload image: ' + error.message);
 		throw error;
+=======
+		console.error("Error uploading image:", error);
+		throw new Error('Failed to upload image: ' + error.message);
+>>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
 	}
 	return newPhoto;
 }
