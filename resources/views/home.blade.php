@@ -1615,19 +1615,27 @@
     }
 
     function getRestaurantName(vendorId) {
+        // Check if Firebase is initialized
+        var firebaseDb = null;
+        if (typeof database !== 'undefined' && database) {
+            firebaseDb = database;
+        } else if (typeof db !== 'undefined' && db) {
+            firebaseDb = db;
+        }
+        
+        if (!firebaseDb) {
+            console.error('Firebase not initialized in getRestaurantName');
+            return;
+        }
 
-        database.collection('vendors').doc(vendorId).get().then(async function (snapshots) {
-
+        firebaseDb.collection('vendors').doc(vendorId).get().then(async function (snapshots) {
             if(snapshots.exists){
-
                 var data = snapshots.data();
-
                 $(".restname_"+vendorId).text(data.title);
-
             }
-
+        }).catch(function(error) {
+            console.error('Error getting restaurant name:', error);
         });
-
     }
 
     function buildOrderHTML(snapshots) {
