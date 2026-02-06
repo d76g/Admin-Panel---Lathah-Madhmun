@@ -13,25 +13,11 @@ function getDecryptedCookie(cookieName) {
     }
 }
 
-// Initialize Firebase with retry logic
-var firebaseInitializationAttempts = 0;
-var maxFirebaseInitAttempts = 10;
-
-function initializeFirebaseApp() {
-    if (typeof firebase === 'undefined') {
-        firebaseInitializationAttempts++;
-        if (firebaseInitializationAttempts < maxFirebaseInitAttempts) {
-            console.warn('Firebase SDK not loaded yet, retrying... (' + firebaseInitializationAttempts + '/' + maxFirebaseInitAttempts + ')');
-            setTimeout(initializeFirebaseApp, 500);
-        } else {
-            console.error('Firebase SDK not loaded after ' + maxFirebaseInitAttempts + ' attempts. Please check that Firebase scripts are included.');
-        }
-        return;
-    }
-    
+// Initialize Firebase only if all required config values are available
+if (typeof firebase !== 'undefined') {
     try {
         // Check if Firebase is already initialized
-        var apps = firebase.apps || [];
+        var apps = firebase.apps;
         if (apps.length === 0) {
             var firebaseConfig = {
                 apiKey: getDecryptedCookie('XSRF-TOKEN-AK'),
@@ -45,36 +31,29 @@ function initializeFirebaseApp() {
             };
 
             // Validate that all required config values are present
-            if (firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId && firebaseConfig.storageBucket) {
+            if (firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId) {
                 firebase.initializeApp(firebaseConfig);
                 console.log('Firebase initialized successfully');
-                console.log('Project ID:', firebaseConfig.projectId);
-                console.log('Storage Bucket:', firebaseConfig.storageBucket);
-                
-                // Trigger custom event for other scripts to listen to
-                if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('firebaseInitialized'));
-                }
             } else {
-                console.error('Firebase configuration incomplete. Missing values:');
-                if (!firebaseConfig.apiKey) console.error('  - FIREBASE_APIKEY');
-                if (!firebaseConfig.authDomain) console.error('  - FIREBASE_AUTH_DOMAIN');
-                if (!firebaseConfig.projectId) console.error('  - FIREBASE_PROJECT_ID');
-                if (!firebaseConfig.storageBucket) console.error('  - FIREBASE_STORAGE_BUCKET');
-                console.warn('Please check your .env file for Firebase credentials and ensure cookies are set.');
+                console.warn('Firebase configuration incomplete. Some cookies may be missing. Please check your .env file for Firebase credentials.');
+                console.warn('Missing values:', {
+                    apiKey: !firebaseConfig.apiKey,
+                    authDomain: !firebaseConfig.authDomain,
+                    projectId: !firebaseConfig.projectId,
+                    storageBucket: !firebaseConfig.storageBucket
+                });
+                // Debug: Check if cookies exist
+                console.log('Available cookies:', {
+                    'XSRF-TOKEN-AK': $.cookie('XSRF-TOKEN-AK') ? 'exists' : 'missing',
+                    'XSRF-TOKEN-AD': $.cookie('XSRF-TOKEN-AD') ? 'exists' : 'missing',
+                    'XSRF-TOKEN-PI': $.cookie('XSRF-TOKEN-PI') ? 'exists' : 'missing',
+                    'XSRF-TOKEN-SB': $.cookie('XSRF-TOKEN-SB') ? 'exists' : 'missing'
+                });
             }
-        } else {
-            console.log('Firebase already initialized');
         }
     } catch (error) {
         console.error('Error initializing Firebase:', error);
     }
-}
-
-// Start initialization when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeFirebaseApp);
 } else {
-    // DOM is already ready
-    initializeFirebaseApp();
+    console.error('Firebase SDK not loaded. Please check that Firebase scripts are included before this file.');
 } 

@@ -35,37 +35,34 @@ class AppServiceProvider extends ServiceProvider
             $expires = time() + 3600; // 1 hour
             $path = '/';
             $domain = null;
-            // Don't use secure flag to avoid issues - cookies will work on both HTTP and HTTPS
-            $secure = false;
+            $secure = false; // Set to false to work on both HTTP and HTTPS
             $httponly = false; // Must be false for JavaScript to read
             
-            // Helper function to set cookie
-            $setCookie = function($name, $value) use ($expires, $path, $domain, $secure, $httponly) {
-                if ($value && $value !== '') {
-                    if (PHP_VERSION_ID >= 70300) {
-                        setcookie($name, bin2hex($value), [
-                            'expires' => $expires,
-                            'path' => $path,
-                            'domain' => $domain,
-                            'secure' => $secure,
-                            'httponly' => $httponly,
-                            'samesite' => 'Lax'
-                        ]);
-                    } else {
-                        setcookie($name, bin2hex($value), $expires, $path, $domain, $secure, $httponly);
-                    }
-                }
-            };
-            
-            // Set all Firebase cookies
-            $setCookie('XSRF-TOKEN-AK', env('FIREBASE_APIKEY'));
-            $setCookie('XSRF-TOKEN-AD', env('FIREBASE_AUTH_DOMAIN'));
-            $setCookie('XSRF-TOKEN-DU', env('FIREBASE_DATABASE_URL'));
-            $setCookie('XSRF-TOKEN-PI', env('FIREBASE_PROJECT_ID'));
-            $setCookie('XSRF-TOKEN-SB', env('FIREBASE_STORAGE_BUCKET'));
-            $setCookie('XSRF-TOKEN-MS', env('FIREBASE_MESSAAGING_SENDER_ID'));
-            $setCookie('XSRF-TOKEN-AI', env('FIREBASE_APP_ID'));
-            $setCookie('XSRF-TOKEN-MI', env('FIREBASE_MEASUREMENT_ID'));
+            // Set Firebase configuration cookies
+            if (env('FIREBASE_APIKEY')) {
+                setcookie('XSRF-TOKEN-AK', bin2hex(env('FIREBASE_APIKEY')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_AUTH_DOMAIN')) {
+                setcookie('XSRF-TOKEN-AD', bin2hex(env('FIREBASE_AUTH_DOMAIN')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_DATABASE_URL')) {
+                setcookie('XSRF-TOKEN-DU', bin2hex(env('FIREBASE_DATABASE_URL')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_PROJECT_ID')) {
+                setcookie('XSRF-TOKEN-PI', bin2hex(env('FIREBASE_PROJECT_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_STORAGE_BUCKET')) {
+                setcookie('XSRF-TOKEN-SB', bin2hex(env('FIREBASE_STORAGE_BUCKET')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_MESSAAGING_SENDER_ID')) {
+                setcookie('XSRF-TOKEN-MS', bin2hex(env('FIREBASE_MESSAAGING_SENDER_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_APP_ID')) {
+                setcookie('XSRF-TOKEN-AI', bin2hex(env('FIREBASE_APP_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_MEASUREMENT_ID')) {
+                setcookie('XSRF-TOKEN-MI', bin2hex(env('FIREBASE_MEASUREMENT_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
         }
     }
 }
