@@ -2063,7 +2063,7 @@
 
         }
 
-        if (intRegex.test(tip_amount) || floatRegex.test(tip_amount) && !isNaN(tip_amount)) {
+        if ((intRegex.test(tip_amount) || floatRegex.test(tip_amount)) && !isNaN(tip_amount)) {
 
             tip_amount = parseFloat(tip_amount).toFixed(decimal_degits);
 
