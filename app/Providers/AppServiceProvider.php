@@ -31,15 +31,38 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         // Only set cookies when running in web context, not CLI
-        if (!$this->app->runningInConsole()) {
-            setcookie('XSRF-TOKEN-AK', bin2hex(env('FIREBASE_APIKEY')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-AD', bin2hex(env('FIREBASE_AUTH_DOMAIN')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-DU', bin2hex(env('FIREBASE_DATABASE_URL')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-PI', bin2hex(env('FIREBASE_PROJECT_ID')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-SB', bin2hex(env('FIREBASE_STORAGE_BUCKET')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-MS', bin2hex(env('FIREBASE_MESSAAGING_SENDER_ID')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-AI', bin2hex(env('FIREBASE_APP_ID')), time() + 3600, "/");
-            setcookie('XSRF-TOKEN-MI', bin2hex(env('FIREBASE_MEASUREMENT_ID')), time() + 3600, "/");
+        if (!$this->app->runningInConsole() && !headers_sent()) {
+            $expires = time() + 3600; // 1 hour
+            $path = '/';
+            $domain = null;
+            $secure = false; // Set to false to work on both HTTP and HTTPS
+            $httponly = false; // Must be false for JavaScript to read
+            
+            // Set Firebase configuration cookies
+            if (env('FIREBASE_APIKEY')) {
+                setcookie('XSRF-TOKEN-AK', bin2hex(env('FIREBASE_APIKEY')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_AUTH_DOMAIN')) {
+                setcookie('XSRF-TOKEN-AD', bin2hex(env('FIREBASE_AUTH_DOMAIN')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_DATABASE_URL')) {
+                setcookie('XSRF-TOKEN-DU', bin2hex(env('FIREBASE_DATABASE_URL')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_PROJECT_ID')) {
+                setcookie('XSRF-TOKEN-PI', bin2hex(env('FIREBASE_PROJECT_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_STORAGE_BUCKET')) {
+                setcookie('XSRF-TOKEN-SB', bin2hex(env('FIREBASE_STORAGE_BUCKET')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_MESSAAGING_SENDER_ID')) {
+                setcookie('XSRF-TOKEN-MS', bin2hex(env('FIREBASE_MESSAAGING_SENDER_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_APP_ID')) {
+                setcookie('XSRF-TOKEN-AI', bin2hex(env('FIREBASE_APP_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
+            if (env('FIREBASE_MEASUREMENT_ID')) {
+                setcookie('XSRF-TOKEN-MI', bin2hex(env('FIREBASE_MEASUREMENT_ID')), $expires, $path, $domain, $secure, $httponly);
+            }
         }
     }
 }

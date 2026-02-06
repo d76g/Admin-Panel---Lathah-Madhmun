@@ -33,8 +33,22 @@ if (typeof firebase !== 'undefined') {
             // Validate that all required config values are present
             if (firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId) {
                 firebase.initializeApp(firebaseConfig);
+                console.log('Firebase initialized successfully');
             } else {
                 console.warn('Firebase configuration incomplete. Some cookies may be missing. Please check your .env file for Firebase credentials.');
+                console.warn('Missing values:', {
+                    apiKey: !firebaseConfig.apiKey,
+                    authDomain: !firebaseConfig.authDomain,
+                    projectId: !firebaseConfig.projectId,
+                    storageBucket: !firebaseConfig.storageBucket
+                });
+                // Debug: Check if cookies exist
+                console.log('Available cookies:', {
+                    'XSRF-TOKEN-AK': $.cookie('XSRF-TOKEN-AK') ? 'exists' : 'missing',
+                    'XSRF-TOKEN-AD': $.cookie('XSRF-TOKEN-AD') ? 'exists' : 'missing',
+                    'XSRF-TOKEN-PI': $.cookie('XSRF-TOKEN-PI') ? 'exists' : 'missing',
+                    'XSRF-TOKEN-SB': $.cookie('XSRF-TOKEN-SB') ? 'exists' : 'missing'
+                });
             }
         }
     } catch (error) {
