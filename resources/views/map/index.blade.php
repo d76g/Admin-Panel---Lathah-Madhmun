@@ -61,14 +61,42 @@
     @section('scripts')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="text/javascript">
-        var database = firebase.firestore();
+        // Initialize Firebase-dependent variables safely
+        var database;
         var map;
         var marker;
         var markers = [];
         var map_data = [];
         var base_url = '{!! asset('/images/') !!}';
-        $(document).ready(function () {
-            var database = firebase.firestore();
+        
+        // Wait for Firebase to be initialized
+        function initializeMapFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                try {
+                    database = firebase.firestore();
+                    console.log('Map page Firebase initialized successfully');
+                    initializeMapData();
+                    return true;
+                } catch (error) {
+                    console.error('Error initializing Firebase in map page:', error);
+                    return false;
+                }
+            } else {
+                console.warn('Firebase not initialized yet in map page, retrying...');
+                setTimeout(initializeMapFirebase, 500);
+                return false;
+            }
+        }
+        
+        function initializeMapData() {
+            if (!database) {
+                console.error('Database not initialized in initializeMapData');
+                return;
+            }
+            
+            // Initialize the map first
+            InitializeGodsEyeMap();
+            
             var orders = [];
             var orders_drivers = [];
             database.collection('restaurant_orders').where('status', '==', 'In Transit').get().then(async function (snapshots) {
@@ -82,7 +110,10 @@
                         }
                     });
                 }
+            }).catch(function(error) {
+                console.error('Error loading orders:', error);
             });
+            
             var drivers = [];
             database.collection('users').where('role', '==', 'driver').where('location', '!=', null).get().then(async function (snapshots) {
                 if (snapshots.docs.length > 0) {
@@ -99,10 +130,17 @@
                 let mapdata = $.merge(orders, drivers)
                 loadData(mapdata);
                 searchDriver();
+            }).catch(function(error) {
+                console.error('Error loading drivers:', error);
             });
+        }
+        
+        $(document).ready(function () {
+            // Initialize map click handlers (don't depend on Firebase)
             setTimeout(function () {
                 $(".sidebartoggler").click();
             }, 500);
+            
             $(document).on("click", ".ride-list .track-from", function () {
                 var lat = $(this).data('lat');
                 var lng = $(this).data('lng');
@@ -119,6 +157,34 @@
                     google.maps.event.trigger(markers[index], 'click');
                 }
             });
+            
+            // Initialize Firebase and start loading data
+            // Listen for Firebase initialization event
+            window.addEventListener('firebaseInitialized', function() {
+                console.log('Received firebaseInitialized event in map page');
+                initializeMapFirebase();
+            });
+            
+            // Start waiting for Firebase
+            function waitForFirebase() {
+                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                    if (initializeMapFirebase()) {
+                        return; // Success
+                    }
+                }
+                
+                // If not ready, wait and retry (max 10 seconds)
+                var attempts = (waitForFirebase.attempts || 0) + 1;
+                waitForFirebase.attempts = attempts;
+                
+                if (attempts < 20) { // 20 attempts * 500ms = 10 seconds max
+                    setTimeout(waitForFirebase, 500);
+                } else {
+                    console.error('Firebase initialization timeout in map page');
+                }
+            }
+            
+            waitForFirebase();
         });
           function InitializeGodsEyeMap() {
               var default_lat = getCookie('default_latitude');
@@ -294,6 +360,11 @@
                 }
             }
             async function locationUpdate(marker, driver) {
+                if (!database) {
+                    console.error('Database not initialized in locationUpdate');
+                    return;
+                }
+                
                 database.collection("users").doc(driver.id).get().then((doc) => {
                     let data = doc.data();
                     if(data && data.location && data.location.latitude && data.location.longitude ){
@@ -307,6 +378,11 @@
             }
         }
         async function getUserDetail(userId) {
+            if (!database) {
+                console.error('Database not initialized in getUserDetail');
+                return null;
+            }
+            
             if (userId != '') {
                 return database.collection("users").doc(userId).get().then((doc) => {
                     return doc.data();
@@ -314,6 +390,11 @@
             }
         }
         async function getDriverDetail(driverId) {
+            if (!database) {
+                console.error('Database not initialized in getDriverDetail');
+                return null;
+            }
+            
             if (driverId != '') {
                 return database.collection("users").where('isActive', '==', true).where('id','==',driverId).get().then((querySnapshot) => {
                     if (!querySnapshot.empty) {

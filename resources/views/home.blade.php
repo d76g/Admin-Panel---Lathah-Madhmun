@@ -1125,9 +1125,10 @@
 
             },1500);
 
+        }).catch(function(error) {
+            console.error('Error loading recent payouts:', error);
         });
-
-    });
+    }
 
     async function getTotalEarnings() {
 
@@ -1840,7 +1841,7 @@
 
             }
 
-        })
+        });
 
     }
     
@@ -2140,7 +2141,7 @@
 
             }
 
-        })
+        });
 
     }
 
@@ -2202,7 +2203,7 @@
 
             }
 
-        })
+        });
 
     }
 
