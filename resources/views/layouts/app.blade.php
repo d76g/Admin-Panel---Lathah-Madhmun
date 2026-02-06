@@ -645,7 +645,10 @@
 
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
 
+{{-- jquery.alert.js is optional - load only if file exists --}}
+@if(file_exists(public_path('js/jquery.alert.js')))
 <script src="{{ asset('js/jquery.alert.js') }}"></script>
+@endif
 
 <script src="{{ asset('js/jquery.masking.js') }}"></script>
 
