@@ -486,6 +486,29 @@ Route::post('send-notification', [App\Http\Controllers\NotificationController::c
 
 Route::post('store-firebase-service', [App\Http\Controllers\HomeController::class,'storeFirebaseService'])->name('store-firebase-service');
 
+// Debug route to check Firebase cookie settings
+Route::get('/test-firebase-cookies', function() {
+    return response()->json([
+        'env_values' => [
+            'FIREBASE_APIKEY' => env('FIREBASE_APIKEY') ? 'SET' : 'MISSING',
+            'FIREBASE_AUTH_DOMAIN' => env('FIREBASE_AUTH_DOMAIN') ? 'SET' : 'MISSING',
+            'FIREBASE_PROJECT_ID' => env('FIREBASE_PROJECT_ID') ? 'SET' : 'MISSING',
+            'FIREBASE_STORAGE_BUCKET' => env('FIREBASE_STORAGE_BUCKET') ? 'SET' : 'MISSING',
+        ],
+        'cookies_set' => [
+            'XSRF-TOKEN-AK' => isset($_COOKIE['XSRF-TOKEN-AK']) ? 'SET' : 'MISSING',
+            'XSRF-TOKEN-AD' => isset($_COOKIE['XSRF-TOKEN-AD']) ? 'SET' : 'MISSING',
+            'XSRF-TOKEN-PI' => isset($_COOKIE['XSRF-TOKEN-PI']) ? 'SET' : 'MISSING',
+            'XSRF-TOKEN-SB' => isset($_COOKIE['XSRF-TOKEN-SB']) ? 'SET' : 'MISSING',
+        ],
+        'php_info' => [
+            'headers_sent' => headers_sent(),
+            'running_in_console' => app()->runningInConsole(),
+            'php_version' => PHP_VERSION,
+        ]
+    ]);
+})->name('test-firebase-cookies');
+
 Route::post('pay-to-user', [App\Http\Controllers\UserController::class,'payToUser'])->name('pay.user');
 Route::post('check-payout-status', [App\Http\Controllers\UserController::class,'checkPayoutStatus'])->name('check.payout.status');
 
