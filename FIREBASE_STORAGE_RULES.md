@@ -51,6 +51,12 @@ service firebase.storage {
       allow read: if true;
     }
     
+    // Allow write access to language folder (for language flags)
+    match /language/{fileName} {
+      allow write: if true;
+      allow read: if true;
+    }
+    
     // Deny all other writes
     match /{allPaths=**} {
       allow write: if false;
@@ -150,6 +156,12 @@ service firebase.storage {
     }
     
     match /Story/images/{fileName} {
+      allow write: if isImage() && isUnderSizeLimit();
+      allow read: if true;
+    }
+    
+    // Language folder - allow image uploads under 5MB
+    match /language/{fileName} {
       allow write: if isImage() && isUnderSizeLimit();
       allow read: if true;
     }

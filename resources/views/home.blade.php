@@ -732,7 +732,7 @@
 
                 jQuery("#vendor_count").empty();
 
-                jQuery("#vendor_count").text(snapshot.docs.length)
+                jQuery("#vendor_count").text(snapshot.docs.length);
 
                 setVisitors();
 
@@ -1766,7 +1766,7 @@
 
             }
 
-        })
+        });
 
     }
 
@@ -1954,7 +1954,7 @@
 
         }
 
-        if (intRegex.test(tip_amount) || floatRegex.test(tip_amount) && !isNaN(tip_amount)) {
+        if ((intRegex.test(tip_amount) || floatRegex.test(tip_amount)) && !isNaN(tip_amount)) {
 
             tip_amount = parseFloat(tip_amount).toFixed(decimal_degits);
 
@@ -2032,7 +2032,7 @@
 
             }
 
-        })
+        });
 
     }
 
@@ -2094,7 +2094,7 @@
 
             }
 
-        })
+        });
 
     }
 
