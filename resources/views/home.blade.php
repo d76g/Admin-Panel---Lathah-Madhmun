@@ -764,7 +764,7 @@
 
                 jQuery("#vendor_count").empty();
 
-                jQuery("#vendor_count").text(snapshot.docs.length)
+                jQuery("#vendor_count").text(snapshot.docs.length);
 
                 setVisitors();
 
@@ -863,7 +863,9 @@
 
             placeholderImage = placeholderImageData.image;
 
-        })
+        }).catch(function(error) {
+            console.error('Error loading placeholder image:', error);
+        });
 
         var offest = 1;
 
@@ -1404,7 +1406,7 @@
 
                 }
 
-            })
+            }
 
             if (currencyAtRight) {
 
@@ -1442,7 +1444,9 @@
 
             setCommision();
 
-        })
+        }).catch(function(error) {
+            console.error('Error loading total earnings:', error);
+        });
 
         jQuery("#data-table_processing").hide();
 
