@@ -657,39 +657,69 @@
 <script src="{{asset('js/chart.js')}}"></script>
 
 <script>
-
-    jQuery("#data-table_processing").show();
-
-    var db = firebase.firestore();
-
-    var currency = db.collection('settings');
-
+    // Initialize Firebase-dependent variables safely
+    var db, currency, refCurrency;
     var currentCurrency = '';
-
     var currencyAtRight = false;
-
     var decimal_degits = 0;
-
-    var refCurrency = database.collection('currencies').where('isActive', '==', true);
-
-    refCurrency.get().then(async function (snapshots) {
-
-        var currencyData = snapshots.docs[0].data();
-
-        currentCurrency = currencyData.symbol;
-
-        currencyAtRight = currencyData.symbolAtRight;
-
-        if (currencyData.decimal_degits) {
-
-            decimal_degits = currencyData.decimal_degits;
-
+    
+    // Wait for Firebase to be initialized
+    function initializeDashboardFirebase() {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            try {
+                db = firebase.firestore();
+                currency = db.collection('settings');
+                
+                // Use database from app.blade.php if available, otherwise use db
+                if (typeof database !== 'undefined' && database) {
+                    refCurrency = database.collection('currencies').where('isActive', '==', true);
+                } else {
+                    refCurrency = db.collection('currencies').where('isActive', '==', true);
+                }
+                
+                console.log('Dashboard Firebase initialized successfully');
+                loadDashboardData();
+                return true;
+            } catch (error) {
+                console.error('Error initializing Firebase in dashboard:', error);
+                return false;
+            }
+        } else {
+            console.warn('Firebase not initialized yet in dashboard, retrying...');
+            setTimeout(initializeDashboardFirebase, 500);
+            return false;
         }
-
-    });
-
-    $(document).ready(function () {
-
+    }
+    
+    function loadDashboardData() {
+        if (!refCurrency) {
+            console.error('refCurrency not initialized');
+            return;
+        }
+        
+        refCurrency.get().then(async function (snapshots) {
+            if (snapshots.empty) {
+                console.warn('No active currency found');
+                return;
+            }
+            
+            var currencyData = snapshots.docs[0].data();
+            currentCurrency = currencyData.symbol;
+            currencyAtRight = currencyData.symbolAtRight;
+            
+            if (currencyData.decimal_degits) {
+                decimal_degits = currencyData.decimal_degits;
+            }
+        }).catch(function(error) {
+            console.error('Error loading currency:', error);
+        });
+        
+        // Load dashboard statistics
+        if (!db) {
+            console.error('db not initialized');
+            return;
+        }
+        
         db.collection('restaurant_orders').orderBy("createdAt",'desc').get().then(
 
             (snapshot) => {   
@@ -698,6 +728,8 @@
 
                 jQuery("#order_count").text(snapshot.docs.length);
 
+            }).catch(function(error) {
+                console.error('Error loading orders:', error);
             });
 
         db.collection('vendor_products').get().then(
@@ -1769,6 +1801,40 @@
         })
 
     }
+    
+    // Start initialization when document is ready
+    jQuery(document).ready(function() {
+        jQuery("#data-table_processing").show();
+        
+        // Listen for Firebase initialization event
+        function waitForFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                if (initializeDashboardFirebase()) {
+                    return; // Success
+                }
+            }
+            
+            // If not ready, wait and retry (max 10 seconds)
+            var attempts = (waitForFirebase.attempts || 0) + 1;
+            waitForFirebase.attempts = attempts;
+            
+            if (attempts < 20) { // 20 attempts * 500ms = 10 seconds max
+                setTimeout(waitForFirebase, 500);
+            } else {
+                console.error('Firebase initialization timeout in dashboard');
+                jQuery("#data-table_processing").hide();
+            }
+        }
+        
+        // Also listen for custom event from jquery.validate.js
+        window.addEventListener('firebaseInitialized', function() {
+            console.log('Received firebaseInitialized event in dashboard');
+            initializeDashboardFirebase();
+        });
+        
+        // Start waiting
+        waitForFirebase();
+    });
 
     $(document).ready(function () {
 
