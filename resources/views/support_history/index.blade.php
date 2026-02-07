@@ -86,48 +86,126 @@
 
 @section('scripts')
     <script>
-        var database = firebase.firestore();
-
-        var refData = database.collection('chat_admin');        
-
+        // Initialize Firebase-dependent variables safely
+        var database;
+        var refData;
         var placeholderImage = "";
-        var placeholder = database.collection('settings').doc('placeHolderImage');
-        placeholder.get().then(async function (snapshotsimage) {
-            var placeholderImageData = snapshotsimage.data();
-            placeholderImage = placeholderImageData.image;
-        });
+        
+        // Wait for Firebase to be initialized
+        function initializeSupportFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                try {
+                    database = firebase.firestore();
+                    refData = database.collection('chat_admin');
+                    
+                    // Load placeholder image
+                    var placeholder = database.collection('settings').doc('placeHolderImage');
+                    placeholder.get().then(async function (snapshotsimage) {
+                        if (snapshotsimage.exists) {
+                            var placeholderImageData = snapshotsimage.data();
+                            if (placeholderImageData && placeholderImageData.image) {
+                                placeholderImage = placeholderImageData.image;
+                            }
+                        }
+                    }).catch(function(error) {
+                        console.error('Error loading placeholder image:', error);
+                    });
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error initializing Firebase in support history page:', error);
+                    return false;
+                }
+            } else {
+                console.warn('Firebase not initialized yet in support history page, retrying...');
+                setTimeout(initializeSupportFirebase, 500);
+                return false;
+            }
+        }
+        
+        // Initialize Firebase before using it
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            initializeSupportFirebase();
+        } else {
+            // Listen for Firebase initialization event
+            window.addEventListener('firebaseInitialized', function() {
+                console.log('Received firebaseInitialized event in support history page');
+                initializeSupportFirebase();
+            });
+            
+            // Start waiting for Firebase
+            function waitForFirebase() {
+                if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+                    if (initializeSupportFirebase()) {
+                        return; // Success
+                    }
+                }
+                
+                // If not ready, wait and retry (max 10 seconds)
+                var attempts = (waitForFirebase.attempts || 0) + 1;
+                waitForFirebase.attempts = attempts;
+                
+                if (attempts < 20) { // 20 attempts * 500ms = 10 seconds max
+                    setTimeout(waitForFirebase, 500);
+                } else {
+                    console.error('Firebase initialization timeout in support history page');
+                }
+            }
+            
+            waitForFirebase();
+        }
 
         var append_list = '';
 
         $(document).ready(function() {
+            // Wait for Firebase to be initialized before setting up DataTable
+            function initializeDataTable() {
+                if (!database || !refData) {
+                    console.log('Waiting for Firebase to initialize...');
+                    setTimeout(initializeDataTable, 500);
+                    return;
+                }
 
-            $(document.body).on('click', '.redirecttopage', function() {
-                var url = $(this).attr('data-url');
-                window.location.href = url;
-            });
+                $(document.body).on('click', '.redirecttopage', function() {
+                    var url = $(this).attr('data-url');
+                    window.location.href = url;
+                });
 
-            jQuery("#data-table_processing").show();
+                jQuery("#data-table_processing").show();
 
-            const table = $('#supportHistoryTable').DataTable({
+                const table = $('#supportHistoryTable').DataTable({
                 pageLength: 10,
                 processing: false,
                 serverSide: true,
                 responsive: true,
                 ajax: async function(data, callback, settings) {
+                    if (!database || !refData) {
+                        console.error('Firebase not initialized');
+                        callback({
+                            draw: data.draw,
+                            recordsTotal: 0,
+                            recordsFiltered: 0,
+                            data: []
+                        });
+                        return;
+                    }
+                    
                     const start = data.start;
                     const length = data.length;
                     const searchValue = data.search.value.toLowerCase();
                     const orderColumnIndex = data.order[0].column;
                     const orderDirection = data.order[0].dir;
-                    const orderableColumns = ['', 'userName', 'message', 'messageDate', '']
+                    const orderableColumns = ['', 'userName', 'message', 'messageDate', ''];
                     const orderByField = orderableColumns[orderColumnIndex];
                     if (searchValue.length >= 3 || searchValue.length === 0) {
                         $('#data-table_processing').show();
                     }
-                    const snapshot = await refData.orderBy('createdAt', 'desc').get();
-                    let allChats = [];
+                    
+                    try {
+                        const snapshot = await refData.orderBy('createdAt', 'desc').get();
+                        let allChats = [];
 
-                    await Promise.all(snapshot.docs.map(async (doc) => {
+                        await Promise.all(snapshot.docs.map(async (doc) => {
                         const data = doc.data();
                         // console.log(doc.id);
                         const threadSnap = await database.collection("chat_admin")
@@ -161,72 +239,82 @@
 
                             });
                         }
-                    }));
-                    let filtered = allChats;
-                    if (searchValue) {
+                        }));
+                        let filtered = allChats;
+                        if (searchValue) {
 
-                        filtered = allChats.filter(chat =>
-                            chat.userName.toLowerCase().includes(searchValue) ||
-                            chat.message.toLowerCase().includes(searchValue) ||
-                            chat.messageDate.toString().toLowerCase().indexOf(searchValue) > -1
-                        );
-                    }
-                    filtered.sort((a, b) => {
-
-                        let aVal = a[orderByField] ? a[orderByField].toString().toLowerCase() : '';
-                        let bVal = b[orderByField] ? b[orderByField].toString().toLowerCase() : '';
-                        if (orderByField === 'messageDate') {
-                            aVal = a[orderByField] ? new Date(a[orderByField].toDate()).getTime() : 0;
-                            bVal = b[orderByField] ? new Date(b[orderByField].toDate()).getTime() : 0;
-
+                            filtered = allChats.filter(chat =>
+                                chat.userName.toLowerCase().includes(searchValue) ||
+                                chat.message.toLowerCase().includes(searchValue) ||
+                                chat.messageDate.toString().toLowerCase().indexOf(searchValue) > -1
+                            );
                         }
-                        if (orderDirection === 'asc') {
-                            return (aVal > bVal) ? 1 : -1;
-                        } else {
-                            return (aVal < bVal) ? 1 : -1;
-                        }
+                        filtered.sort((a, b) => {
 
-                    });
-                    let records = [];
-                    const totalRecords = filtered.length;
+                            let aVal = a[orderByField] ? a[orderByField].toString().toLowerCase() : '';
+                            let bVal = b[orderByField] ? b[orderByField].toString().toLowerCase() : '';
+                            if (orderByField === 'messageDate') {
+                                aVal = a[orderByField] ? new Date(a[orderByField].toDate()).getTime() : 0;
+                                bVal = b[orderByField] ? new Date(b[orderByField].toDate()).getTime() : 0;
 
-                    $('.total_count').text(totalRecords);
-                    const paginated = filtered.slice(start, start + length);
-                    await Promise.all(paginated.map(async (childData) => {
-                        childData.unreadCount = await countUnreadMessages(childData.userId);
-
-                        // Build and collect initial HTML
-                        const getData = await buildHTML(childData);
-                        records.push(getData);
-                       
-                        listenToUnreadMessages(
-                            childData.userId,
-                            (unreadCount) => {
-                                childData.unreadCount = unreadCount;
-                                buildHTML(childData).then(updatedHTML => {
-                                    const countEl = document.querySelector(`.unread-count.unread-${childData.userId}`);
-                                    if (countEl) {
-                                        if (unreadCount > 0) {
-                                            countEl.innerText = unreadCount;
-                                            countEl.style.display = 'inline-block';
-                                        } else {
-                                            countEl.innerText = '';
-                                            countEl.style.display = 'none';
-                                        }
-                                    }
-                                });
                             }
-                        );
+                            if (orderDirection === 'asc') {
+                                return (aVal > bVal) ? 1 : -1;
+                            } else {
+                                return (aVal < bVal) ? 1 : -1;
+                            }
 
-                    }));
-                    $('#data-table_processing').hide();
+                        });
+                        let records = [];
+                        const totalRecords = filtered.length;
 
-                    callback({
-                        draw: data.draw,
-                        recordsTotal: totalRecords,
-                        recordsFiltered: totalRecords,
-                        data: records
-                    });
+                        $('.total_count').text(totalRecords);
+                        const paginated = filtered.slice(start, start + length);
+                        await Promise.all(paginated.map(async (childData) => {
+                            childData.unreadCount = await countUnreadMessages(childData.userId);
+
+                            // Build and collect initial HTML
+                            const getData = await buildHTML(childData);
+                            records.push(getData);
+                           
+                            listenToUnreadMessages(
+                                childData.userId,
+                                (unreadCount) => {
+                                    childData.unreadCount = unreadCount;
+                                    buildHTML(childData).then(updatedHTML => {
+                                        const countEl = document.querySelector(`.unread-count.unread-${childData.userId}`);
+                                        if (countEl) {
+                                            if (unreadCount > 0) {
+                                                countEl.innerText = unreadCount;
+                                                countEl.style.display = 'inline-block';
+                                            } else {
+                                                countEl.innerText = '';
+                                                countEl.style.display = 'none';
+                                            }
+                                        }
+                                    });
+                                }
+                            );
+
+                        }));
+                        $('#data-table_processing').hide();
+
+                        callback({
+                            draw: data.draw,
+                            recordsTotal: totalRecords,
+                            recordsFiltered: totalRecords,
+                            data: records
+                        });
+                    } catch (error) {
+                        console.error('Error loading support history:', error);
+                        $('#data-table_processing').hide();
+                        callback({
+                            draw: data.draw,
+                            recordsTotal: 0,
+                            recordsFiltered: 0,
+                            data: []
+                        });
+                    }
 
                 },
                 order: [3, 'desc'],
@@ -250,25 +338,28 @@
 
             });
 
-            function debounce(func, wait) {
-                let timeout;
-                const context = this;
-                return function(...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(context, args), wait);
-                };
-            }
-            $('#search-input').on('input', debounce(function() {
-                const searchValue = $(this).val();
-                if (searchValue.length >= 3) {
-                    $('#data-table_processing').show();
-                    table.search(searchValue).draw();
-                } else if (searchValue.length === 0) {
-                    $('#data-table_processing').show();
-                    table.search('').draw();
+                function debounce(func, wait) {
+                    let timeout;
+                    const context = this;
+                    return function(...args) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(context, args), wait);
+                    };
                 }
-            }, 300));
-
+                $('#search-input').on('input', debounce(function() {
+                    const searchValue = $(this).val();
+                    if (searchValue.length >= 3) {
+                        $('#data-table_processing').show();
+                        table.search(searchValue).draw();
+                    } else if (searchValue.length === 0) {
+                        $('#data-table_processing').show();
+                        table.search('').draw();
+                    }
+                }, 300));
+            }
+            
+            // Start initializing DataTable
+            initializeDataTable();
         });
         async function getUserName(id) {
             var userName = '';
@@ -341,27 +432,55 @@
 
         async function countUnreadMessages(userId) {
             var unreadCount = 0;
-            const snapshot = await database.collection('chat_admin').doc(userId).collection("thread")
-                .where("seen", "==", false)
-                .where("senderId", "!=", "admin")
-                .get();
-            unreadCount = snapshot.size;
+            try {
+                // Get all messages and filter in JavaScript to avoid index requirement
+                const snapshot = await database.collection('chat_admin').doc(userId).collection("thread")
+                    .get();
+                
+                // Filter messages that are unread and not from admin
+                unreadCount = snapshot.docs.filter(doc => {
+                    const data = doc.data();
+                    return data.seen === false && data.senderId !== 'admin';
+                }).length;
+            } catch (error) {
+                console.error('Error counting unread messages:', error);
+                unreadCount = 0;
+            }
             return unreadCount;
         }
 
-       function listenToUnreadMessages(userId, onInitialCount, onUpdate) {
-            return database.collection('chat_admin')
-                .doc(userId)
-                .collection("thread")
-                .where("seen", "==", false)
-                .where("senderId", "!=", "admin")
-                .onSnapshot(snapshot => {
-                    const unreadCount = snapshot.size;
-                    onInitialCount(unreadCount); // first call
-                    if (onUpdate) {
-                        onUpdate(unreadCount); // additional updates
-                    }
-                });
+        function listenToUnreadMessages(userId, callback) {
+            try {
+                // Use onSnapshot with filtering to avoid index requirement
+                const unsubscribe = database.collection('chat_admin')
+                    .doc(userId)
+                    .collection("thread")
+                    .onSnapshot(snapshot => {
+                        // Filter messages that are unread and not from admin
+                        const unreadMessages = snapshot.docs.filter(doc => {
+                            const data = doc.data();
+                            return data.seen === false && data.senderId !== 'admin';
+                        });
+                        const unreadCount = unreadMessages.length;
+                        if (typeof callback === 'function') {
+                            callback(unreadCount);
+                        }
+                    }, error => {
+                        console.error('Error listening to unread messages:', error);
+                        if (typeof callback === 'function') {
+                            callback(0);
+                        }
+                    });
+                
+                // Return unsubscribe function
+                return unsubscribe;
+            } catch (error) {
+                console.error('Error setting up unread messages listener:', error);
+                if (typeof callback === 'function') {
+                    callback(0);
+                }
+                return function() {}; // Return empty unsubscribe function
+            }
         }
 
 
