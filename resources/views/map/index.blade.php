@@ -483,9 +483,13 @@
                 let data = doc.data();
                 if(data && data.location && data.location.latitude && data.location.longitude ){
                     if (mapType == "OFFLINE" ){
-                        marker.setLatLng([data.location.latitude, data.location.longitude]);
+                        if (marker && typeof marker.setLatLng === 'function') {
+                            marker.setLatLng([data.location.latitude, data.location.longitude]);
+                        }
                     } else{
-                        marker.setPosition(new google.maps.LatLng(data.location.latitude, data.location.longitude));
+                        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined' && marker && typeof marker.setPosition === 'function') {
+                            marker.setPosition(new google.maps.LatLng(data.location.latitude, data.location.longitude));
+                        }
                     }
                 }
             });
