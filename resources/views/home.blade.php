@@ -657,69 +657,49 @@
 <script src="{{asset('js/chart.js')}}"></script>
 
 <script>
-    // Initialize Firebase-dependent variables safely
-    var db, currency, refCurrency;
+
+    jQuery("#data-table_processing").show();
+
+    var db = firebase.firestore();
+
+    var currency = db.collection('settings');
+
     var currentCurrency = '';
+
     var currencyAtRight = false;
+
     var decimal_degits = 0;
-    
-    // Wait for Firebase to be initialized
-    function initializeDashboardFirebase() {
-        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-            try {
-                db = firebase.firestore();
-                currency = db.collection('settings');
-                
-                // Use database from app.blade.php if available, otherwise use db
-                if (typeof database !== 'undefined' && database) {
-                    refCurrency = database.collection('currencies').where('isActive', '==', true);
-                } else {
-                    refCurrency = db.collection('currencies').where('isActive', '==', true);
-                }
-                
-                console.log('Dashboard Firebase initialized successfully');
-                loadDashboardData();
-                return true;
-            } catch (error) {
-                console.error('Error initializing Firebase in dashboard:', error);
-                return false;
-            }
-        } else {
-            console.warn('Firebase not initialized yet in dashboard, retrying...');
-            setTimeout(initializeDashboardFirebase, 500);
-            return false;
-        }
-    }
-    
-    function loadDashboardData() {
-        if (!refCurrency) {
-            console.error('refCurrency not initialized');
-            return;
-        }
-        
-        refCurrency.get().then(async function (snapshots) {
-            if (snapshots.empty) {
-                console.warn('No active currency found');
-                return;
-            }
-            
+
+    var placeholderImage = '';
+
+    var refCurrency = db.collection('currencies').where('isActive', '==', true);
+
+    refCurrency.get().then(async function (snapshots) {
+
+        if (snapshots.docs && snapshots.docs.length > 0) {
+
             var currencyData = snapshots.docs[0].data();
+
             currentCurrency = currencyData.symbol;
+
             currencyAtRight = currencyData.symbolAtRight;
-            
+
             if (currencyData.decimal_degits) {
+
                 decimal_degits = currencyData.decimal_degits;
+
             }
-        }).catch(function(error) {
-            console.error('Error loading currency:', error);
-        });
-        
-        // Load dashboard statistics
-        if (!db) {
-            console.error('db not initialized');
-            return;
+
         }
-        
+
+    }).catch(function(error) {
+
+        console.error('Error loading currency:', error);
+
+    });
+
+    $(document).ready(function () {
+
         db.collection('restaurant_orders').orderBy("createdAt",'desc').get().then(
 
             (snapshot) => {   
@@ -728,8 +708,6 @@
 
                 jQuery("#order_count").text(snapshot.docs.length);
 
-            }).catch(function(error) {
-                console.error('Error loading orders:', error);
             });
 
         db.collection('vendor_products').get().then(
@@ -770,20 +748,7 @@
 
             });
 
-        // Only call getTotalEarnings if db is initialized
-        if (db) {
-            getTotalEarnings();
-        } else {
-            // Wait for Firebase and retry
-            setTimeout(function() {
-                if (db) getTotalEarnings();
-            }, 1000);
-        }
-
-        if (!db) {
-            console.warn('db not initialized, skipping order status queries');
-            return;
-        }
+        getTotalEarnings();
 
         db.collection('restaurant_orders').where('status', 'in', ["Order Placed"]).get().then(
 
@@ -859,12 +824,22 @@
 
         placeholder.get().then(async function (snapshotsimage) {
 
-            var placeholderImageData = snapshotsimage.data();
+            if (snapshotsimage.exists) {
 
-            placeholderImage = placeholderImageData.image;
+                var placeholderImageData = snapshotsimage.data();
+
+                if (placeholderImageData && placeholderImageData.image) {
+
+                    placeholderImage = placeholderImageData.image;
+
+                }
+
+            }
 
         }).catch(function(error) {
+
             console.error('Error loading placeholder image:', error);
+
         });
 
         var offest = 1;
@@ -943,7 +918,7 @@
 
         var append_listrecent_order = document.getElementById('append_list_recent_order');
 
-        append_list.innerHTML = '';
+        append_listrecent_order.innerHTML = '';
 
         ref = db.collection('restaurant_orders');
 
@@ -1125,10 +1100,9 @@
 
             },1500);
 
-        }).catch(function(error) {
-            console.error('Error loading recent payouts:', error);
         });
-    }
+
+    });
 
     async function getTotalEarnings() {
 
@@ -1161,13 +1135,6 @@
         var v12 = 0;
 
         var currentYear = new Date().getFullYear();
-
-        // Check if Firebase is initialized
-        if (!db) {
-            console.warn('Firebase not initialized in getTotalEarnings, retrying...');
-            setTimeout(getTotalEarnings, 1000);
-            return;
-        }
 
         await db.collection('restaurant_orders').where('status', 'in', ["Order Completed"]).get().then(async function (orderSnapshots) {
 
@@ -1383,16 +1350,6 @@
 
                     var datas = new Date(orderData.createdAt._seconds * 1000);
 
-                    if (!db) {
-                        console.error('Firebase not initialized, cannot update order');
-                        return;
-                    }
-                    
-                    if (!db) {
-                        console.error('Firebase not initialized, cannot update order');
-                        return;
-                    }
-                    
                     var dates = firebase.firestore.Timestamp.fromDate(datas);
 
                     db.collection('restaurant_orders').doc(orderData.id).update({'createdAt': dates}).then(() => {
@@ -1407,7 +1364,7 @@
 
                 }
 
-            }
+            })
 
             if (currencyAtRight) {
 
@@ -1445,9 +1402,7 @@
 
             setCommision();
 
-        }).catch(function(error) {
-            console.error('Error loading total earnings:', error);
-        });
+        })
 
         jQuery("#data-table_processing").hide();
 
@@ -1650,27 +1605,19 @@
     }
 
     function getRestaurantName(vendorId) {
-        // Check if Firebase is initialized
-        var firebaseDb = null;
-        if (typeof database !== 'undefined' && database) {
-            firebaseDb = database;
-        } else if (typeof db !== 'undefined' && db) {
-            firebaseDb = db;
-        }
-        
-        if (!firebaseDb) {
-            console.error('Firebase not initialized in getRestaurantName');
-            return;
-        }
 
-        firebaseDb.collection('vendors').doc(vendorId).get().then(async function (snapshots) {
+        db.collection('vendors').doc(vendorId).get().then(async function (snapshots) {
+
             if(snapshots.exists){
+
                 var data = snapshots.data();
+
                 $(".restname_"+vendorId).text(data.title);
+
             }
-        }).catch(function(error) {
-            console.error('Error getting restaurant name:', error);
+
         });
+
     }
 
     function buildOrderHTML(snapshots) {
@@ -1719,7 +1666,7 @@
 
             html = html + '<td data-url="' + route + '" class="redirecttopage"><i class="fa fa-shopping-cart"></i> ' + quan + '</td>';
 
-            html = html + '</a></tr>';
+            html = html + '</tr>';
 
             count++;
 
@@ -1844,40 +1791,6 @@
         });
 
     }
-    
-    // Start initialization when document is ready
-    jQuery(document).ready(function() {
-        jQuery("#data-table_processing").show();
-        
-        // Listen for Firebase initialization event
-        function waitForFirebase() {
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                if (initializeDashboardFirebase()) {
-                    return; // Success
-                }
-            }
-            
-            // If not ready, wait and retry (max 10 seconds)
-            var attempts = (waitForFirebase.attempts || 0) + 1;
-            waitForFirebase.attempts = attempts;
-            
-            if (attempts < 20) { // 20 attempts * 500ms = 10 seconds max
-                setTimeout(waitForFirebase, 500);
-            } else {
-                console.error('Firebase initialization timeout in dashboard');
-                jQuery("#data-table_processing").hide();
-            }
-        }
-        
-        // Also listen for custom event from jquery.validate.js
-        window.addEventListener('firebaseInitialized', function() {
-            console.log('Received firebaseInitialized event in dashboard');
-            initializeDashboardFirebase();
-        });
-        
-        // Start waiting
-        waitForFirebase();
-    });
 
     $(document).ready(function () {
 

@@ -56,13 +56,11 @@
             vertical-align: middle;
         }
     </style>
-    @endsection
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    @endsection
     @section('scripts')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="text/javascript">
-<<<<<<< HEAD
-=======
         // Helper function to get cookie (in case it's not loaded from app.blade.php yet)
         function getCookie(name) {
             var nameEQ = name + "=";
@@ -75,7 +73,6 @@
             return null;
         }
         
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         // Initialize Firebase-dependent variables safely
         var database;
         var map;
@@ -84,13 +81,21 @@
         var map_data = [];
         var base_url = '{!! asset('/images/') !!}';
         
+        // Initialize mapType - will be updated from Firebase settings or use global if available
+        var mapType = typeof window.mapType !== 'undefined' ? window.mapType : 'ONLINE';
+        
         // Wait for Firebase to be initialized
         function initializeMapFirebase() {
             if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
                 try {
                     database = firebase.firestore();
                     console.log('Map page Firebase initialized successfully');
-                    initializeMapData();
+                    
+                    // Load map type from Firebase settings
+                    loadMapType().then(function() {
+                        initializeMapData();
+                    });
+                    
                     return true;
                 } catch (error) {
                     console.error('Error initializing Firebase in map page:', error);
@@ -101,6 +106,40 @@
                 setTimeout(initializeMapFirebase, 500);
                 return false;
             }
+        }
+        
+        // Load map type from Firebase settings (only if not already set globally)
+        function loadMapType() {
+            return new Promise(function(resolve) {
+                // If mapType is already set globally from layout, use it
+                if (typeof window.mapType !== 'undefined' && window.mapType) {
+                    mapType = window.mapType;
+                    console.log('Using global mapType:', mapType);
+                    resolve();
+                    return;
+                }
+                
+                if (!database) {
+                    console.warn('Database not initialized, using default mapType: ONLINE');
+                    resolve();
+                    return;
+                }
+                
+                database.collection('settings').doc('DriverNearBy').get().then(async function (snapshots) {
+                    var data = snapshots.data();
+                    if (data && data.selectedMapType && data.selectedMapType == "osm") {
+                        mapType = "OFFLINE";
+                    } else {
+                        mapType = "ONLINE";
+                    }
+                    console.log('Map type loaded from Firebase:', mapType);
+                    resolve();
+                }).catch(function(error) {
+                    console.error('Error loading map type, using default:', error);
+                    mapType = 'ONLINE';
+                    resolve();
+                });
+            });
         }
         
         function initializeMapData() {
@@ -161,15 +200,21 @@
                 var lng = $(this).data('lng');
                 var index = $(this).data('index');
                 if (mapType == "OFFLINE" ){
-                    map.setView([lat, lng], map.getZoom());
-                    if(markers[index]){
-                       markers[index].openPopup();
-                    } else {
-                       console.log("Marker at index " + index + " is undefined.");
+                    if (map && typeof L !== 'undefined') {
+                        map.setView([lat, lng], map.getZoom());
+                        if(markers[index]){
+                           markers[index].openPopup();
+                        } else {
+                           console.log("Marker at index " + index + " is undefined.");
+                        }
                     }
                 } else{
-                    map.panTo(new google.maps.LatLng(lat, lng));
-                    google.maps.event.trigger(markers[index], 'click');
+                    if (typeof google !== 'undefined' && typeof google.maps !== 'undefined' && map) {
+                        map.panTo(new google.maps.LatLng(lat, lng));
+                        if (markers[index]) {
+                            google.maps.event.trigger(markers[index], 'click');
+                        }
+                    }
                 }
             });
             
@@ -203,6 +248,11 @@
         });
         
         function InitializeGodsEyeMap() {
+            // Prevent double initialization
+            if (InitializeGodsEyeMap.initialized) {
+                return;
+            }
+            
             var default_lat = getCookie('default_latitude') || '24.7136'; // Default to a reasonable location if cookie not set
             var default_lng = getCookie('default_longitude') || '46.6753';
             var legend = document.getElementById('legend');
@@ -211,13 +261,46 @@
                 console.error('Legend element not found');
                 return;
             }
+            
             if (mapType == "OFFLINE" ){
+                // Wait for Leaflet to be loaded
+                if (typeof L === 'undefined') {
+                    var attempts = (InitializeGodsEyeMap.leafletAttempts || 0) + 1;
+                    InitializeGodsEyeMap.leafletAttempts = attempts;
+                    
+                    if (attempts > 20) { // 10 seconds max
+                        console.error('Leaflet failed to load after 10 seconds');
+                        return;
+                    }
+                    
+                    console.log('Waiting for Leaflet to load... (attempt ' + attempts + ')');
+                    setTimeout(InitializeGodsEyeMap, 500);
+                    return;
+                }
+                
+                InitializeGodsEyeMap.initialized = true;
                 map = L.map('map').setView([default_lat, default_lng], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '© OpenStreetMap'
                 }).addTo(map);
             } else{
+                // Wait for Google Maps to be loaded
+                if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                    var attempts = (InitializeGodsEyeMap.googleAttempts || 0) + 1;
+                    InitializeGodsEyeMap.googleAttempts = attempts;
+                    
+                    if (attempts > 20) { // 10 seconds max
+                        console.error('Google Maps failed to load after 10 seconds');
+                        return;
+                    }
+                    
+                    console.log('Waiting for Google Maps to load... (attempt ' + attempts + ')');
+                    setTimeout(InitializeGodsEyeMap, 500);
+                    return;
+                }
+                
+                InitializeGodsEyeMap.initialized = true;
                 var myLatlng = new google.maps.LatLng(default_lat, default_lng);
                 var infowindow = new google.maps.InfoWindow();
                 var mapOptions = {
@@ -247,16 +330,20 @@
                   legend.appendChild(div);
               }
             if (mapType == "OFFLINE" ){
-                var lmaplegend  = L.control({ position: 'bottomleft' });
-                lmaplegend.onAdd = function (map) {
-                    var div = L.DomUtil.create('div', 'legend');
-                    div.innerHTML = "<h4>Map Legend</h4>";
-                    div.appendChild(legend);
-                    return div;
-                };
-                lmaplegend.addTo(map);
+                if (typeof L !== 'undefined' && map) {
+                    var lmaplegend  = L.control({ position: 'bottomleft' });
+                    lmaplegend.onAdd = function (map) {
+                        var div = L.DomUtil.create('div', 'legend');
+                        div.innerHTML = "<h4>Map Legend</h4>";
+                        div.appendChild(legend);
+                        return div;
+                    };
+                    lmaplegend.addTo(map);
+                }
             } else{
-                map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+                if (typeof google !== 'undefined' && typeof google.maps !== 'undefined' && map) {
+                    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(legend);
+                }
             }
           }
         async function loadData(data) {
@@ -321,7 +408,7 @@
                             html += '<div class="live-tracking-inner">';
                             html += '<span class="listicon"></span>';
                             html += '<h3 class="drier-name">{{trans("lang.driver_name")}} : <span class="dvrname">' + driver.firstName + ' ' + driver.lastName + '</span></h3>';
-                            html += '<span class="badge badge-success">Available<span>';
+                            html += '<span class="badge badge-success">Available</span>';
                             html += '</div>';
                             html += '</div>';
                         }
@@ -357,52 +444,39 @@
                                 locationUpdate(marker, driver);
                             }, 10000);
                         } else{
-                            let marker = new google.maps.Marker({
-                                position: new google.maps.LatLng(driver.location.latitude, driver.location.longitude),
-                                icon: {
-                                    url: iconImg,
-                                    scaledSize: new google.maps.Size(25, 25)
-                                },
-                                map: map
-                            });
-                            let infowindow = new google.maps.InfoWindow({
-                                content: content
-                            });
-                            marker.addListener('click', function () {
-                                infowindow.open(map, marker);
-                            });
-                            markers[i] = marker;
-                            marker.setMap(map);
-                            setInterval(function () {
-                                locationUpdate(marker, driver);
-                            }, 10000);
+                            if (typeof google !== 'undefined' && typeof google.maps !== 'undefined' && map) {
+                                let marker = new google.maps.Marker({
+                                    position: new google.maps.LatLng(driver.location.latitude, driver.location.longitude),
+                                    icon: {
+                                        url: iconImg,
+                                        scaledSize: new google.maps.Size(25, 25)
+                                    },
+                                    map: map
+                                });
+                                let infowindow = new google.maps.InfoWindow({
+                                    content: content
+                                });
+                                marker.addListener('click', function () {
+                                    infowindow.open(map, marker);
+                                });
+                                markers[i] = marker;
+                                marker.setMap(map);
+                                setInterval(function () {
+                                    locationUpdate(marker, driver);
+                                }, 10000);
+                            } else {
+                                console.error('Google Maps not loaded, cannot create marker');
+                            }
                         }
                     }
                 }
             }
-<<<<<<< HEAD
-            async function locationUpdate(marker, driver) {
-                if (!database) {
-                    console.error('Database not initialized in locationUpdate');
-                    return;
-                }
-                
-                database.collection("users").doc(driver.id).get().then((doc) => {
-                    let data = doc.data();
-                    if(data && data.location && data.location.latitude && data.location.longitude ){
-                        if (mapType == "OFFLINE" ){
-                            marker.setLatLng([data.location.latitude, data.location.longitude]);
-                        } else{
-                            marker.setPosition(new google.maps.LatLng(data.location.latitude, data.location.longitude));
-                        }
-                    }
-                });
-=======
+        }
+
         async function locationUpdate(marker, driver) {
             if (!database) {
                 console.error('Database not initialized in locationUpdate');
                 return;
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
             }
             
             database.collection("users").doc(driver.id).get().then((doc) => {

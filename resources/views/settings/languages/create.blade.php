@@ -75,28 +75,12 @@ var fileName = "";
 var flagImageFile = '';
 
 // Wait for Firebase to be initialized
-<<<<<<< HEAD
-function initializeFirebaseServices() {
-=======
 function initializeLanguageFirebase() {
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
     if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
         try {
             database = firebase.firestore();
             storageRef = firebase.storage().ref('language');
             ref = database.collection('settings').doc('languages');
-<<<<<<< HEAD
-            console.log('Firebase services initialized successfully');
-            console.log('Storage bucket:', firebase.app().options.storageBucket);
-            return true;
-        } catch (error) {
-            console.error('Error initializing Firebase services:', error);
-            return false;
-        }
-    } else {
-        console.warn('Firebase not initialized yet, retrying...');
-        setTimeout(initializeFirebaseServices, 500);
-=======
             
             // Log the storage bucket being used
             var app = firebase.app();
@@ -115,52 +99,17 @@ function initializeLanguageFirebase() {
     } else {
         console.warn('Firebase not initialized yet in language page, retrying...');
         setTimeout(initializeLanguageFirebase, 500);
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         return false;
     }
 }
 
-<<<<<<< HEAD
-$(document).ready(function(){
-    // Initialize Firebase first
-    if (!initializeFirebaseServices()) {
-        setTimeout(function() {
-            if (!initializeFirebaseServices()) {
-                console.error('Firebase initialization failed. Please check your Firebase configuration.');
-                alert('Firebase is not properly configured. Language images cannot be uploaded. Please check your Firebase settings.');
-            } else {
-                loadLanguages();
-            }
-        }, 1000);
-    } else {
-        loadLanguages();
-    }
-});
-
-function loadLanguages() {
-    if (!ref) {
-        setTimeout(loadLanguages, 500);
-=======
 function loadLanguagesList() {
     if (!ref) {
         console.error('ref not initialized');
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         return;
     }
     
     ref.get().then( async function(snapshots){
-<<<<<<< HEAD
-		snapshots=snapshots.data();
-		if (snapshots == undefined) {
-            database.collection('settings').doc('languages').set({'list':''});
-         }else{
-			snapshots=snapshots.list;
-			if(snapshots.length){
-				languages=snapshots;
-			}
-		}
-	}).catch(function(error) {
-=======
         snapshots=snapshots.data();
         if (snapshots == undefined) {
             database.collection('settings').doc('languages').set({'list':''});
@@ -171,22 +120,10 @@ function loadLanguagesList() {
             }
         }
     }).catch(function(error) {
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
         console.error('Error loading languages:', error);
     });
 }
 
-<<<<<<< HEAD
-$(".save-setting-btn").click(function(){
-    // Check if Firebase is initialized before proceeding
-    if (!database || !storageRef) {
-        $(".error_top").show();
-        $(".error_top").html("");
-        $(".error_top").append("<p>Firebase is not initialized. Please refresh the page and check your Firebase configuration.</p>");
-        window.scrollTo(0, 0);
-        return;
-    }
-=======
 $(document).ready(function(){
     // Listen for Firebase initialization event
     window.addEventListener('firebaseInitialized', function() {
@@ -224,7 +161,6 @@ $(".save-setting-btn").click(function(){
 		return;
 	}
 	
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
 	var title = $("#title").val();
 	var slug = $("#slug").val();
 	var active = $(".is_active").is(":checked");
@@ -306,50 +242,8 @@ async function storeImageData() {
 	}
 	
 	var newPhoto = '';
-	
-	// Check if Firebase Storage is available
-	if (!storageRef) {
-		console.error('Firebase Storage is not initialized');
-		alert('Firebase Storage is not available. Please check your Firebase configuration.');
-		throw new Error('Firebase Storage not initialized');
-	}
-	
-	if (!photo || photo === '') {
-		console.error('No image selected');
-		throw new Error('No image selected');
-	}
-	
 	try {
 		if (photo != flagImageFile) {
-<<<<<<< HEAD
-			// Remove data URL prefix if present
-			var base64Data = photo.replace(/^data:image\/[a-z]+;base64,/, "");
-			
-			if (!base64Data) {
-				throw new Error('Invalid image data');
-			}
-			
-			// Determine content type from file extension or default to jpeg
-			var contentType = 'image/jpeg';
-			if (fileName) {
-				var ext = fileName.split('.').pop().toLowerCase();
-				if (ext === 'png') contentType = 'image/png';
-				else if (ext === 'gif') contentType = 'image/gif';
-				else if (ext === 'webp') contentType = 'image/webp';
-			}
-			
-			console.log('Uploading language image to Firebase Storage...');
-			console.log('Storage bucket:', firebase.app().options.storageBucket);
-			
-			var uploadTask = await storageRef.child(fileName).putString(base64Data, 'base64', {
-				contentType: contentType
-			});
-			
-			console.log('Image uploaded, getting download URL...');
-			var downloadURL = await uploadTask.ref.getDownloadURL();
-			console.log('Image URL:', downloadURL);
-			
-=======
 			photo = photo.replace(/^data:image\/[a-z]+;base64,/, "")
 			
 			// Detect content type from original file
@@ -370,21 +264,14 @@ async function storeImageData() {
 			var uploadTask = await storageRef.child(fileName).putString(photo, 'base64', {contentType: contentType});
 			var downloadURL = await uploadTask.ref.getDownloadURL();
 			console.log('Image uploaded successfully:', downloadURL);
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
 			newPhoto = downloadURL;
 			photo = downloadURL;
 		} else {
 			newPhoto = photo;
 		}
 	} catch (error) {
-<<<<<<< HEAD
-		console.error("Error uploading image to Firebase Storage:", error);
-		alert('Failed to upload image: ' + error.message);
-		throw error;
-=======
 		console.error("Error uploading image:", error);
 		throw new Error('Failed to upload image: ' + error.message);
->>>>>>> e58ffe7b07a1c695f7de94836f242ec9a3c5c5f5
 	}
 	return newPhoto;
 }

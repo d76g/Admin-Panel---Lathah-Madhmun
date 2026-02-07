@@ -1,5 +1,68 @@
 # Firebase Storage Security Rules Configuration
 
+## ⚠️ QUICK FIX FOR LANGUAGE UPLOAD ERROR
+
+**Current Error:** `Firebase Storage: User does not have permission to access 'language/ksa_1770411107444.png'`
+
+**Immediate Solution:**
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project: **lazatmadmoon-6c282**
+3. Navigate to **Storage** → **Rules** tab
+4. Copy and paste these rules:
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read access to all files
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+    
+    // Allow write access to images folder
+    match /images/{fileName} {
+      allow write: if true;
+      allow read: if true;
+    }
+    
+    // Allow write access to chat_uploads folder
+    match /chat_uploads/{fileName} {
+      allow write: if true;
+      allow read: if true;
+    }
+    
+    // Allow write access to Story folder
+    match /Story/{fileName} {
+      allow write: if true;
+      allow read: if true;
+    }
+    
+    // Allow write access to Story/images folder
+    match /Story/images/{fileName} {
+      allow write: if true;
+      allow read: if true;
+    }
+    
+    // Allow write access to language folder (for language flags) - REQUIRED FOR LANGUAGE UPLOADS
+    match /language/{fileName} {
+      allow write: if true;
+      allow read: if true;
+    }
+    
+    // Deny all other writes
+    match /{allPaths=**} {
+      allow write: if false;
+    }
+  }
+}
+```
+
+5. Click **Publish** button
+6. Wait 10-20 seconds for rules to propagate
+7. Try uploading the language flag again
+
+---
+
 ## Problem
 You're getting the error: "Firebase Storage: User does not have permission to access 'images/banner.jpg'"
 
