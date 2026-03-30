@@ -1319,6 +1319,8 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
 
 
 
+    if (database) {
+
     database.collection('settings').doc("notification_setting").get().then(async function (snapshots) {
 
         var data = snapshots.data();
@@ -1358,6 +1360,8 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         }
 
     });
+
+    }
 
 
 
