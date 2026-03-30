@@ -72,6 +72,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runReviewAttributesIndex() {
     var database = firebase.firestore();
     var ref = database.collection('review_attributes').orderBy('title');
     var append_list = '';
@@ -214,5 +215,14 @@
             window.location.href = '{{ route("reviewattributes")}}';
         });
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runReviewAttributesIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function reviewAttributesIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', reviewAttributesIndexFirebaseReady);
+        runReviewAttributesIndex();
+    });
+}
 </script>
 @endsection

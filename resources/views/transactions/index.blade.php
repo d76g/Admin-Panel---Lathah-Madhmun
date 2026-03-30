@@ -280,6 +280,7 @@
 
 @section('scripts')
     <script>
+        function runTransactionsIndex() {
         var database = firebase.firestore();
 
         var refData = database.collection('wallet');
@@ -1244,5 +1245,14 @@
             }
 
         });
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runTransactionsIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function transactionsIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', transactionsIndexFirebaseReady);
+            runTransactionsIndex();
+        });
+    }
     </script>
 @endsection

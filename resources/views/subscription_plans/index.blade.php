@@ -98,6 +98,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runSubscriptionPlansIndex() {
     var database=firebase.firestore();
     var ref=database.collection('subscription_plans');
 
@@ -446,5 +447,14 @@
             $('.earnings_'+planId).html(total);
         });
     }
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runSubscriptionPlansIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function subscriptionPlansIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', subscriptionPlansIndexFirebaseReady);
+        runSubscriptionPlansIndex();
+    });
+}
 </script>
 @endsection

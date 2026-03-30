@@ -82,6 +82,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runMenuItemsIndex() {
     var database = firebase.firestore();
     var refData = database.collection('menu_items').orderBy('title');
     var placeholderImage = '';
@@ -258,5 +259,14 @@
         await deleteDocumentWithImage('menu_items',id,'photo');
         window.location.reload();
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runMenuItemsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function menuItemsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', menuItemsIndexFirebaseReady);
+        runMenuItemsIndex();
+    });
+}
 </script>
 @endsection

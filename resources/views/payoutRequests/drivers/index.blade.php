@@ -242,6 +242,7 @@
 @endsection
 @section('scripts')
     <script>
+        function runPayoutRequestsDriversIndex() {
         var database = firebase.firestore();
         var driverId = "{{ $id }}";
         var intRegex = /^\d+$/;
@@ -974,5 +975,14 @@
                 alert("{{ trans('lang.select_delete_alert') }}");
             }
         });
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runPayoutRequestsDriversIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function payoutRequestsDriversIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', payoutRequestsDriversIndexFirebaseReady);
+            runPayoutRequestsDriversIndex();
+        });
+    }
     </script>
 @endsection

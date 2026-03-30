@@ -132,6 +132,7 @@
 @endsection
 @section('scripts')
     <script type="text/javascript">
+        function runDeliverymanIndex() {
         var database = firebase.firestore();
         var id = "{{ $id }}";
         if (id != '') {
@@ -646,5 +647,14 @@
                 email: vendor_userData.email || "-"
             };
         }
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runDeliverymanIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function deliverymanIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', deliverymanIndexFirebaseReady);
+            runDeliverymanIndex();
+        });
+    }
     </script>
 @endsection

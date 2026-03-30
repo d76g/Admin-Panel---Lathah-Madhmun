@@ -43,6 +43,7 @@
 @endsection
 @section('scripts')
 <script>
+function runHomepageTemplateIndex() {
     var database = firebase.firestore();
     var photo = "";
     var ref = database.collection('settings').doc('homepageTemplate');
@@ -89,5 +90,14 @@
             }
         })
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runHomepageTemplateIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function homepageTemplateIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', homepageTemplateIndexFirebaseReady);
+        runHomepageTemplateIndex();
+    });
+}
 </script>
 @endsection

@@ -127,6 +127,7 @@
 @endsection
 @section('scripts')
 <script>
+function runDriverPaymentsIndex() {
     var database = firebase.firestore();
     var ref = database.collection('users').where('role', '==', 'driver').orderBy('firstName');
     var currentCurrency = '';
@@ -490,5 +491,14 @@
         });
         return data;
     }
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runDriverPaymentsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function driverPaymentsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', driverPaymentsIndexFirebaseReady);
+        runDriverPaymentsIndex();
+    });
+}
 </script>
 @endsection

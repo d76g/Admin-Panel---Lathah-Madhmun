@@ -254,6 +254,7 @@
 
 <script>
 
+    function runPaymentsIndex() {
     var database = firebase.firestore();
 
     var offest = 1;
@@ -974,6 +975,16 @@
 
         return data;
 
+    }
+
+    }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runPaymentsIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function paymentsIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', paymentsIndexFirebaseReady);
+            runPaymentsIndex();
+        });
     }
 
 </script>

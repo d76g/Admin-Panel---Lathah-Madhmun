@@ -70,6 +70,7 @@
 @endsection
 @section('scripts')
  <script>
+function runStoreFiltersIndex() {
 var database = firebase.firestore();
 var offest=1;
 var pagesize=10; 
@@ -208,5 +209,14 @@ $(document).on("click","a[name='restaurant-filter-delete']", function (e) {
       window.location = "{{! url()->current() }}";
     }); 
 });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runStoreFiltersIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function storeFiltersIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', storeFiltersIndexFirebaseReady);
+        runStoreFiltersIndex();
+    });
+}
     </script>
 @endsection

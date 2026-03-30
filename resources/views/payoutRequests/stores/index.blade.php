@@ -250,6 +250,7 @@
 @endsection
 @section('scripts')
     <script>
+        function runPayoutRequestsStoresIndex() {
         var database = firebase.firestore();
         var vendorId = '{{ $id }}';
         var intRegex = /^\d+$/;
@@ -905,5 +906,14 @@
                 alert("{{ trans('lang.select_delete_alert') }}");
             }
         });
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runPayoutRequestsStoresIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function payoutRequestsStoresIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', payoutRequestsStoresIndexFirebaseReady);
+            runPayoutRequestsStoresIndex();
+        });
+    }
     </script>
 @endsection

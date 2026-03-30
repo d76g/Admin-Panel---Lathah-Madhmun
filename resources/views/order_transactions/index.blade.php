@@ -72,6 +72,7 @@
 @endsection
 @section('scripts')
 <script>
+function runOrderTransactionsIndex() {
     var database = firebase.firestore();
     var offest=1;
     var pagesize=10; 
@@ -309,5 +310,14 @@ async function orderFunction(orderId) {
     } 
 });
 } 
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runOrderTransactionsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function orderTransactionsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', orderTransactionsIndexFirebaseReady);
+        runOrderTransactionsIndex();
+    });
+}
 </script>
 @endsection

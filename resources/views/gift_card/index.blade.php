@@ -78,6 +78,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runGiftCardIndex() {
     var database = firebase.firestore();
     var ref = database.collection('gift_cards');
     var placeholderImage = '';
@@ -252,5 +253,14 @@
             alert("{{trans('lang.select_delete_alert')}}");
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runGiftCardIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function giftCardIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', giftCardIndexFirebaseReady);
+        runGiftCardIndex();
+    });
+}
 </script>
 @endsection

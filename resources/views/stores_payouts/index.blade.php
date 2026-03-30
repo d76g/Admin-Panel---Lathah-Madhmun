@@ -114,6 +114,7 @@
 @endsection
 @section('scripts')
     <script>
+        function runStoresPayoutsIndex() {
         var database = firebase.firestore();
         var intRegex = /^\d+$/;
         var floatRegex = /^((\d+(\.\d *)?)|((\d*\.)?\d+))$/;
@@ -455,5 +456,14 @@
                 alert("{{ trans('lang.select_delete_alert') }}");
             }
         });
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runStoresPayoutsIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function storesPayoutsIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', storesPayoutsIndexFirebaseReady);
+            runStoresPayoutsIndex();
+        });
+    }
     </script>
 @endsection

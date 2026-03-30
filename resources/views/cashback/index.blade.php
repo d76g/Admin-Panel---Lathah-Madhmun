@@ -80,6 +80,7 @@
 @endsection
 @section('scripts')
     <script type="text/javascript">
+        function runCashbackIndex() {
         var database = firebase.firestore();
         var ref = database.collection('cashback').orderBy('title');
         var append_list = '';
@@ -371,5 +372,14 @@
                 alert("{{ trans('lang.select_delete_alert') }}");
             }
         });
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runCashbackIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function cashbackIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', cashbackIndexFirebaseReady);
+            runCashbackIndex();
+        });
+    }
     </script>
 @endsection

@@ -84,6 +84,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runCurrenciesIndex() {
     var database = firebase.firestore();
     var offest = 1;
     var pagesize = 10;
@@ -339,5 +340,14 @@
             });
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCurrenciesIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function currenciesIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', currenciesIndexFirebaseReady);
+        runCurrenciesIndex();
+    });
+}
 </script>
 @endsection

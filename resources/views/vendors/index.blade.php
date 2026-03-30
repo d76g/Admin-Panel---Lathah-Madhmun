@@ -111,6 +111,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runVendorsIndex() {
     var database=firebase.firestore();
     var type="{{$type}}";
     var user_permissions='<?php echo @session("user_permissions") ?>';
@@ -688,5 +689,14 @@
             });
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runVendorsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function vendorsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', vendorsIndexFirebaseReady);
+        runVendorsIndex();
+    });
+}
 </script>
 @endsection

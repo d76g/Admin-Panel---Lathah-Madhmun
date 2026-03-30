@@ -35,6 +35,7 @@
 @endsection
 @section('scripts')
 <script>
+function runPrivacyPolicyIndex() {
 var database = firebase.firestore();
 var photo ="";
 var ref = database.collection('settings').doc('privacyPolicy');
@@ -80,5 +81,14 @@ $(document).ready(function () {
 		}
 	})
 });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runPrivacyPolicyIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function privacyPolicyIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', privacyPolicyIndexFirebaseReady);
+        runPrivacyPolicyIndex();
+    });
+}
 </script>
 @endsection

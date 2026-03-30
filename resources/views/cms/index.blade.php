@@ -75,6 +75,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runCmsIndex() {
     var database = firebase.firestore();
     var ref = database.collection('cms_pages').orderBy('name');
     var placeholderImage = '';
@@ -238,5 +239,14 @@
             window.location.reload();
         });
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCmsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function cmsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', cmsIndexFirebaseReady);
+        runCmsIndex();
+    });
+}
 </script>
 @endsection

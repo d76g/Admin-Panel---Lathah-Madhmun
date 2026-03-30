@@ -75,6 +75,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runCategoriesIndex() {
     var database = firebase.firestore();
     var ref = database.collection('vendor_categories').orderBy('title');
     var placeholderImage = '';
@@ -264,5 +265,14 @@
             });
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCategoriesIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function categoriesIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', categoriesIndexFirebaseReady);
+        runCategoriesIndex();
+    });
+}
 </script>
 @endsection

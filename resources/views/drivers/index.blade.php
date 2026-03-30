@@ -104,6 +104,7 @@
 @endsection
 @section('scripts')
     <script type="text/javascript">
+        function runDriversIndex() {
         var database = firebase.firestore();
         var type = "{{ $type }}";
         var ref = database.collection('users').where("role", "==", "driver");
@@ -567,6 +568,15 @@
         function searchclear() {
             jQuery("#search").val('');
             searchtext();
+        }
+        }
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            runDriversIndex();
+        } else {
+            window.addEventListener('firebaseInitialized', function driversIndexFirebaseReady() {
+                window.removeEventListener('firebaseInitialized', driversIndexFirebaseReady);
+                runDriversIndex();
+            });
         }
     </script>
 @endsection

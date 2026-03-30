@@ -74,6 +74,7 @@
 @endsection
 @section('scripts')
     <script type="text/javascript">
+        function runOnBoardIndex() {
         var database = firebase.firestore();
         var offest = 1;
         var pagesize = 10;
@@ -150,5 +151,14 @@
             html = html + '</tr>';
             return html;
         }
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runOnBoardIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function onBoardIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', onBoardIndexFirebaseReady);
+            runOnBoardIndex();
+        });
+    }
     </script>
 @endsection

@@ -83,6 +83,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runNotificationIndex() {
     var database = firebase.firestore();
     var refData = database.collection('notifications');
     var ref = refData.orderBy('createdAt', 'desc');
@@ -279,5 +280,14 @@
             window.location.reload();
         });
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runNotificationIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function notificationIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', notificationIndexFirebaseReady);
+        runNotificationIndex();
+    });
+}
 </script>
 @endsection

@@ -80,6 +80,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runDocumentsIndex() {
     var database = firebase.firestore();
     var offest = 1;
     var pagesize = 10;
@@ -423,5 +424,14 @@
         }));
         return isCompleted;
     }
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runDocumentsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function documentsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', documentsIndexFirebaseReady);
+        runDocumentsIndex();
+    });
+}
 </script>
 @endsection

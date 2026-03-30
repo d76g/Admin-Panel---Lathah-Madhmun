@@ -36,6 +36,7 @@
 @endsection
 @section('scripts')
 <script>
+function runTermsConditionsIndex() {
 var database = firebase.firestore();
 var photo ="";
 var ref = database.collection('settings').doc('termsAndConditions');
@@ -80,5 +81,14 @@ $(document).ready(function () {
 	    }
 	})
 });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runTermsConditionsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function termsConditionsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', termsConditionsIndexFirebaseReady);
+        runTermsConditionsIndex();
+    });
+}
 </script>
 @endsection

@@ -249,6 +249,7 @@
 
 @section('scripts')
     <script type="text/javascript">
+        function runItemsIndex() {
         const urlParams = new URLSearchParams(location.search);
 
         for (const [key, value] of urlParams) {
@@ -1184,5 +1185,14 @@
             }
 
         });
+        }
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            runItemsIndex();
+        } else {
+            window.addEventListener('firebaseInitialized', function itemsIndexFirebaseReady() {
+                window.removeEventListener('firebaseInitialized', itemsIndexFirebaseReady);
+                runItemsIndex();
+            });
+        }
     </script>
 @endsection

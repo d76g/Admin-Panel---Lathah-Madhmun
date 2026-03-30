@@ -190,6 +190,7 @@
 @endsection
 @section('scripts')
     <script type="text/javascript">
+        function runOrdersIndex() {
         var database = firebase.firestore();
         var vendor_id = '<?php echo $id; ?>';
         var append_list = '';
@@ -913,6 +914,15 @@
                 var total_price_val = currentCurrency + "" + parseFloat(total_price).toFixed(decimal_degits);
             }
             return total_price_val;
+        }
+        }
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            runOrdersIndex();
+        } else {
+            window.addEventListener('firebaseInitialized', function ordersIndexFirebaseReady() {
+                window.removeEventListener('firebaseInitialized', ordersIndexFirebaseReady);
+                runOrdersIndex();
+            });
         }
     </script>
 @endsection

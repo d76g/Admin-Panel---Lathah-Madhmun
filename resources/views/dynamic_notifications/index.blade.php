@@ -74,6 +74,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runDynamicNotificationsIndex() {
     var database = firebase.firestore();
     var refData = database.collection('dynamic_notification');
     var ref = refData.orderBy('createdAt', 'desc');
@@ -301,5 +302,14 @@
             window.location.reload();
         });
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runDynamicNotificationsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function dynamicNotificationsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', dynamicNotificationsIndexFirebaseReady);
+        runDynamicNotificationsIndex();
+    });
+}
 </script>
 @endsection

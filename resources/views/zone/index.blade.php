@@ -79,6 +79,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runZoneIndex() {
     var database = firebase.firestore();
     var offest = 1;
     var pagesize = 10; 
@@ -215,5 +216,14 @@
             window.location.reload();
         });
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runZoneIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function zoneIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', zoneIndexFirebaseReady);
+        runZoneIndex();
+    });
+}
 </script>
 @endsection

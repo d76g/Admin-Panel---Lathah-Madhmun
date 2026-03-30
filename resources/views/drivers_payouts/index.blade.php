@@ -102,6 +102,7 @@
 @endsection
 @section('scripts')
 <script>
+function runDriversPayoutsIndex() {
     var driver_id = "<?php echo $id; ?>";
     var database = firebase.firestore();
     if (driver_id) {
@@ -414,5 +415,14 @@
             alert("{{trans('lang.select_delete_alert')}}");
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runDriversPayoutsIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function driversPayoutsIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', driversPayoutsIndexFirebaseReady);
+        runDriversPayoutsIndex();
+    });
+}
 </script>
 @endsection

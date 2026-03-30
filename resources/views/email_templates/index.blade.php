@@ -71,6 +71,7 @@
 @endsection
 @section('scripts')
     <script type="text/javascript">
+        function runEmailTemplatesIndex() {
         var database = firebase.firestore();
         var refData = database.collection('email_templates').orderBy('createdAt', 'desc');
         var append_list = '';
@@ -259,5 +260,14 @@
                 window.location.reload();
             });
         });
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runEmailTemplatesIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function emailTemplatesIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', emailTemplatesIndexFirebaseReady);
+            runEmailTemplatesIndex();
+        });
+    }
     </script>
 @endsection

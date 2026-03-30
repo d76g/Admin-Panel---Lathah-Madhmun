@@ -81,6 +81,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runTaxesIndex() {
     var database = firebase.firestore();
     var ref = database.collection('tax').orderBy('title');
     var refCurrency = database.collection('currencies').where('isActive', '==', true);
@@ -238,5 +239,14 @@
             return false;
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runTaxesIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function taxesIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', taxesIndexFirebaseReady);
+        runTaxesIndex();
+    });
+}
 </script>
 @endsection

@@ -106,6 +106,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runAttributesIndex() {
     var database = firebase.firestore();
     var ref = database.collection('vendor_attributes').orderBy('title');
     var append_list = '';
@@ -247,5 +248,14 @@
             window.location.href = '{{ route("attributes")}}';
         });
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runAttributesIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function attributesIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', attributesIndexFirebaseReady);
+        runAttributesIndex();
+    });
+}
 </script>
 @endsection

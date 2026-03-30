@@ -218,6 +218,7 @@
 
 @section('scripts')
     <script type="text/javascript">
+        function runCouponsIndex() {
         var database = firebase.firestore();
 
         var getId = '{{ $id }}';
@@ -764,5 +765,14 @@
             window.location.reload();
 
         });
+        }
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            runCouponsIndex();
+        } else {
+            window.addEventListener('firebaseInitialized', function couponsIndexFirebaseReady() {
+                window.removeEventListener('firebaseInitialized', couponsIndexFirebaseReady);
+                runCouponsIndex();
+            });
+        }
     </script>
 @endsection

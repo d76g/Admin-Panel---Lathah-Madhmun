@@ -79,6 +79,7 @@
 @endsection
 @section('scripts')
 <script type="text/javascript">
+function runLanguagesIndex() {
     var database = firebase.firestore();
     var offest = 1;
     var pagesize = 10;
@@ -278,5 +279,14 @@
             alert("{{trans('lang.select_delete_alert')}}");
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runLanguagesIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function languagesIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', languagesIndexFirebaseReady);
+        runLanguagesIndex();
+    });
+}
 </script>
 @endsection

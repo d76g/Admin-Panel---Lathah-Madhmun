@@ -38,6 +38,7 @@
 @endsection
 @section('scripts')
 <script>
+function runFooterTemplateIndex() {
 var database = firebase.firestore();
 var photo = "";
 var ref = database.collection('settings').doc('footerTemplate');
@@ -88,5 +89,14 @@ $(document).ready(function () {
         }
     })
 });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runFooterTemplateIndex();
+} else {
+    window.addEventListener('firebaseInitialized', function footerTemplateIndexFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', footerTemplateIndexFirebaseReady);
+        runFooterTemplateIndex();
+    });
+}
 </script>
 @endsection
