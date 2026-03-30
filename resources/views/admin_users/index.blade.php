@@ -223,9 +223,9 @@
 
             "language": {
 
-                "zeroRecords": "{{trans("lang.no_record_found")}}",
+                "zeroRecords": (trans('lang.no_record_found')),
 
-                "emptyTable": "{{trans("lang.no_record_found")}}"
+                "emptyTable": (trans('lang.no_record_found'))"
 
                         },
 
@@ -251,9 +251,9 @@
 
             "language": {
 
-                "zeroRecords": "{{trans("lang.no_record_found")}}",
+                "zeroRecords": (trans('lang.no_record_found')),
 
-                "emptyTable": "{{trans("lang.no_record_found")}}"
+                "emptyTable": (trans('lang.no_record_found'))"
 
                         },
 

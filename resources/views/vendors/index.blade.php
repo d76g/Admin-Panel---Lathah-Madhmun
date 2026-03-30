@@ -353,8 +353,8 @@
                 {orderable: false,targets: (checkDeletePermission)? [0,6,7,8]:[5,6,7]},
             ],
             "language": {
-                "zeroRecords": "{{trans("lang.no_record_found")}}",
-                "emptyTable": "{{trans("lang.no_record_found")}}",
+                "zeroRecords": (trans('lang.no_record_found')),
+                "emptyTable": (trans('lang.no_record_found')),
                 "processing": "" // Remove default loader
             },
             dom: 'lfrtipB',

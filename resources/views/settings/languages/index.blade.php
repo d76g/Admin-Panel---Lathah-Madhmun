@@ -128,8 +128,8 @@
                         {orderable: false, targets: [0,1,4,5]},
                     ],
                     "language": {
-                        "zeroRecords": "{{trans("lang.no_record_found")}}",
-                        "emptyTable": "{{trans("lang.no_record_found")}}"
+                        "zeroRecords": (trans('lang.no_record_found')),
+                        "emptyTable": (trans('lang.no_record_found'))"
                     },
                     responsive: true
                 });
@@ -142,8 +142,8 @@
                         {orderable: false, targets: [0,3,4]},
                     ],
                     "language": {
-                        "zeroRecords": "{{trans("lang.no_record_found")}}",
-                        "emptyTable": "{{trans("lang.no_record_found")}}"
+                        "zeroRecords": (trans('lang.no_record_found')),
+                        "emptyTable": (trans('lang.no_record_found'))"
                     },
                     responsive: true
                 });
