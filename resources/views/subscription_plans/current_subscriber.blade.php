@@ -404,9 +404,9 @@
 
             "language": {
 
-                "zeroRecords": (trans('lang.no_record_found')),
+                "zeroRecords": @json(trans('lang.no_record_found')),
 
-                "emptyTable": (trans('lang.no_record_found')),
+                "emptyTable": @json(trans('lang.no_record_found')),
 
                 "processing": ""
 

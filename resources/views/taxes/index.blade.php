@@ -122,8 +122,8 @@
                         {orderable: false, targets: [0, 5, 6]},
                     ],
                     "language": {
-                        "zeroRecords": (trans('lang.no_record_found')),
-                        "emptyTable": (trans('lang.no_record_found'))"
+                        "zeroRecords": @json(trans('lang.no_record_found')),
+                        "emptyTable": @json(trans('lang.no_record_found')),
                     },
                     responsive: true
                 });
@@ -136,8 +136,8 @@
                         {orderable: false, targets: [4, 5]},
                     ],
                     "language": {
-                        "zeroRecords": (trans('lang.no_record_found')),
-                        "emptyTable": (trans('lang.no_record_found'))"
+                        "zeroRecords": @json(trans('lang.no_record_found')),
+                        "emptyTable": @json(trans('lang.no_record_found')),
                     },
                     responsive: true
                 });
