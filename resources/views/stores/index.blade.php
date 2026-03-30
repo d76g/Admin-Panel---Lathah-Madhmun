@@ -423,6 +423,7 @@
 @section('scripts')
 
 <script type="text/javascript">
+    function runStoresIndex() {
     var database = firebase.firestore();
 
     var refData = database.collection('vendors');
@@ -2077,6 +2078,15 @@
         }
 
     });
+    }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runStoresIndex();
+    } else {
+        window.addEventListener('firebaseInitialized', function storesIndexFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', storesIndexFirebaseReady);
+            runStoresIndex();
+        });
+    }
 </script>
 
 @endsection
