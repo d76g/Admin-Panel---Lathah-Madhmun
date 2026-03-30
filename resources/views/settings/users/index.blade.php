@@ -510,7 +510,7 @@
                 table.search('').draw();
             }
         }, 300));
-    });
+    }
     $("#is_active").click(function () {
         $("#userTable .is_open").prop('checked', $(this).prop('checked'));
     });
