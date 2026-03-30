@@ -86,10 +86,15 @@ function initializeFirebaseApp() {
     }
 }
 
-// Start initialization when DOM is ready
+// Initialize as soon as this script runs. Layout inline scripts and @yield('scripts')
+// execute synchronously before DOMContentLoaded, so waiting for DOMContentLoaded
+// caused "No Firebase App '[DEFAULT]'" when views called firebase.firestore() early.
+initializeFirebaseApp();
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeFirebaseApp);
-} else {
-    // DOM is already ready
-    initializeFirebaseApp();
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof firebase !== 'undefined' && (!firebase.apps || firebase.apps.length === 0)) {
+            firebaseInitializationAttempts = 0;
+            initializeFirebaseApp();
+        }
+    });
 } 

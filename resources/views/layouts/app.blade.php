@@ -1393,12 +1393,56 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         return checkFlag;
 
     }
+<<<<<<< HEAD
     
     // Load notification settings - moved to loadFirebaseData function
     function loadNotificationSettings() {
         if (!database) {
             console.warn('Database not available for notification settings');
             return;
+=======
+
+
+
+    if (database) {
+
+    database.collection('settings').doc("notification_setting").get().then(async function (snapshots) {
+
+        var data = snapshots.data();
+
+        if(data != undefined){
+
+            serviceJson = data.serviceJson;
+
+            if(serviceJson != '' && serviceJson != null){
+
+                $.ajax({
+
+                    type: 'POST',
+
+                    data: {
+
+                        serviceJson: btoa(serviceJson),
+
+                    },
+
+                    url: "{{ route('store-firebase-service') }}",
+
+                    headers: {
+
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+
+                    },
+
+                    success: function (data) {
+
+                    }
+
+                });
+
+            }
+
+>>>>>>> 186f3d85fcfa17dc1867fa6069ce86b64dee605f
         }
         
         database.collection('settings').doc("notification_setting").get().then(async function (snapshots) {
@@ -1423,6 +1467,8 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         }).catch(function(error) {
             console.error('Error loading notification settings:', error);
         });
+    }
+
     }
 
 

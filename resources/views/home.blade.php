@@ -658,6 +658,8 @@
 
 <script>
 
+    function runDashboard() {
+
     jQuery("#data-table_processing").show();
 
     var db = firebase.firestore();
@@ -2004,19 +2006,19 @@
 
         const data = {
 
-            labels: [
+            labels: @json([
 
-                "{{trans('lang.dashboard_total_stores')}}",
+                trans('lang.dashboard_total_stores'),
 
-                "{{trans('lang.dashboard_total_orders')}}",
+                trans('lang.dashboard_total_orders'),
 
-                "{{trans('lang.dashboard_total_products')}}",
+                trans('lang.dashboard_total_products'),
 
-                "{{trans('lang.dashboard_total_clients')}}",
+                trans('lang.dashboard_total_clients'),
 
-                "{{trans('lang.dashboard_total_drivers')}}",
+                trans('lang.dashboard_total_drivers'),
 
-            ],
+            ]),
 
             datasets: [{
 
@@ -2062,13 +2064,13 @@
 
         const data = {
 
-            labels: [
+            labels: @json([
 
-                "{{trans('lang.dashboard_total_earnings')}}",
+                trans('lang.dashboard_total_earnings'),
 
-                "{{trans('lang.admin_commission')}}"
+                trans('lang.admin_commission')
 
-            ],
+            ]),
 
             datasets: [{
 
@@ -2118,6 +2120,17 @@
 
         });
 
+    }
+
+    }
+
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runDashboard();
+    } else {
+        window.addEventListener('firebaseInitialized', function dashboardFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', dashboardFirebaseReady);
+            runDashboard();
+        });
     }
 
 </script>
