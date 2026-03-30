@@ -681,6 +681,7 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
 
     // Initialize Firebase-dependent variables safely
     var database, geoFirestore, createdAt, createdAtman, languages_list_main = [];
+    var mapType = 'ONLINE';
     
     // Initialize Firebase using server config (fallback to cookies if server config incomplete)
     function initializeFirebaseFromConfig() {
@@ -734,6 +735,7 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
                     
                     // Load Firebase-dependent data
                     loadFirebaseData();
+                    initMapLoaderAfterFirebase();
                 } else {
                     console.error('Firebase configuration incomplete. Missing required values.');
                 }
@@ -744,6 +746,7 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
                 createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
                 createdAt = {_nanoseconds: createdAtman.nanoseconds, _seconds: createdAtman.seconds};
                 loadFirebaseData();
+                initMapLoaderAfterFirebase();
             }
         } catch (error) {
             console.error('Error initializing Firebase:', error);
@@ -1235,25 +1238,19 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
 
     }
 
-
-
-
-
-    var mapType = 'ONLINE';
-
-    database.collection('settings').doc('DriverNearBy').get().then(async function (snapshots) {
-
-        var data = snapshots.data();
-
-        if (data && data.selectedMapType && data.selectedMapType == "osm") {
-
-            mapType = "OFFLINE"
-
+    // Run only after `database` is set by initializeFirebaseFromConfig (not at script parse time)
+    function initMapLoaderAfterFirebase() {
+        if (!database) {
+            return;
         }
-
-    });
-
-
+        database.collection('settings').doc('DriverNearBy').get().then(async function (snapshots) {
+            var data = snapshots.data();
+            if (data && data.selectedMapType && data.selectedMapType == "osm") {
+                mapType = "OFFLINE";
+            }
+        });
+        loadGoogleMapsScript();
+    }
 
     async function loadGoogleMapsScript() {
 
@@ -1334,10 +1331,6 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
         setCookie('default_longitude','72.571365', 365);
 
     };
-
-
-
-    loadGoogleMapsScript();
 
 
 
