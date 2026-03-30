@@ -248,6 +248,8 @@
 
 <script>
 
+function runCouponsEdit() {
+
 var id = "<?php echo $id;?>";
 
 var database = firebase.firestore();
@@ -698,6 +700,17 @@ function handleFileSelect(evt) {
 
     reader.readAsDataURL(f);
 
+}
+
+}
+
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCouponsEdit();
+} else {
+    window.addEventListener('firebaseInitialized', function couponsEditFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', couponsEditFirebaseReady);
+        runCouponsEdit();
+    });
 }
 
 </script>

@@ -243,6 +243,7 @@
 @endsection
 @section('scripts')
     <script>
+        function runItemsCreate() {
         var database = firebase.firestore();
         var photo = "";
         var addOnesTitle = [];
@@ -1096,5 +1097,14 @@
                 }
             });
         }
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runItemsCreate();
+    } else {
+        window.addEventListener('firebaseInitialized', function itemsCreateFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', itemsCreateFirebaseReady);
+            runItemsCreate();
+        });
+    }
     </script>
 @endsection

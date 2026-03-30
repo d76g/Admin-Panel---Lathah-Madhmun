@@ -125,6 +125,7 @@
 <script src="{{ asset('js/bootstrap-datepicker.min.js') }}"></script>
 <link href="{{ asset('css/bootstrap-datepicker.min.css') }}" rel="stylesheet">
 <script>
+function runCouponsCreate() {
 var database = firebase.firestore();
 var photo_coupon = "";
 var fileName="";
@@ -269,6 +270,15 @@ function handleFileSelect(evt) {
         };
     })(f);
     reader.readAsDataURL(f);
+}
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCouponsCreate();
+} else {
+    window.addEventListener('firebaseInitialized', function couponsCreateFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', couponsCreateFirebaseReady);
+        runCouponsCreate();
+    });
 }
 </script>
 @endsection

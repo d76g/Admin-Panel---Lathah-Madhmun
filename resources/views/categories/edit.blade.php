@@ -91,6 +91,7 @@
 @endsection
 @section('scripts')
 <script>
+function runCategoriesEdit() {
 var id = "<?php echo $id;?>";
 var database = firebase.firestore();
 var ref = database.collection('vendor_categories').where("id", "==", id);
@@ -266,5 +267,14 @@ $("#category_image").resizeImg({
         $("#category_image").val('');
     }
 });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCategoriesEdit();
+} else {
+    window.addEventListener('firebaseInitialized', function categoriesEditFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', categoriesEditFirebaseReady);
+        runCategoriesEdit();
+    });
+}
 </script>
 @endsection

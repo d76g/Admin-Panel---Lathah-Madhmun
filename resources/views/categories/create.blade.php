@@ -95,6 +95,7 @@
 @endsection
 @section('scripts')
 <script>
+function runCategoriesCreate() {
     var database = firebase.firestore();
     var ref = database.collection('vendor_categories');
     var photo = "";
@@ -234,5 +235,14 @@
             $("#category_image").val('');
         }
     });
+}
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+    runCategoriesCreate();
+} else {
+    window.addEventListener('firebaseInitialized', function categoriesCreateFirebaseReady() {
+        window.removeEventListener('firebaseInitialized', categoriesCreateFirebaseReady);
+        runCategoriesCreate();
+    });
+}
 </script>
 @endsection

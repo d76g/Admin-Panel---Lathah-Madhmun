@@ -241,6 +241,7 @@
 @endsection
 @section('scripts')
     <script>
+        function runItemsEdit() {
         var id = "<?php echo $id; ?>";
         var database = firebase.firestore();
         var ref = database.collection('vendor_products').doc(id);
@@ -1112,5 +1113,14 @@
             delete product_specification[index];
             $("#add_product_specification_iteam_" + index).hide();
         }
+        }
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        runItemsEdit();
+    } else {
+        window.addEventListener('firebaseInitialized', function itemsEditFirebaseReady() {
+            window.removeEventListener('firebaseInitialized', itemsEditFirebaseReady);
+            runItemsEdit();
+        });
+    }
     </script>
 @endsection
