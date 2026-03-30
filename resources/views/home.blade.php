@@ -2006,19 +2006,13 @@
 
         const data = {
 
-            labels: @json([
-
+            labels: {!! json_encode([
                 trans('lang.dashboard_total_stores'),
-
                 trans('lang.dashboard_total_orders'),
-
                 trans('lang.dashboard_total_products'),
-
                 trans('lang.dashboard_total_clients'),
-
                 trans('lang.dashboard_total_drivers'),
-
-            ]),
+            ]) !!},
 
             datasets: [{
 
@@ -2064,13 +2058,10 @@
 
         const data = {
 
-            labels: @json([
-
+            labels: {!! json_encode([
                 trans('lang.dashboard_total_earnings'),
-
-                trans('lang.admin_commission')
-
-            ]),
+                trans('lang.admin_commission'),
+            ]) !!},
 
             datasets: [{
 
