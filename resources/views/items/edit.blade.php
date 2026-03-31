@@ -1113,6 +1113,15 @@
             delete product_specification[index];
             $("#add_product_specification_iteam_" + index).hide();
         }
+        window.selectAttribute = selectAttribute;
+        window.addOneFunction = addOneFunction;
+        window.saveAddOneFunction = saveAddOneFunction;
+        window.addProductSpecificationFunction = addProductSpecificationFunction;
+        window.saveProductSpecificationFunction = saveProductSpecificationFunction;
+        window.deleteProductSpecificationSingle = deleteProductSpecificationSingle;
+        window.deleteAddOnesSingle = deleteAddOnesSingle;
+        window.variants_update = variants_update;
+        window.handleVariantFileSelect = handleVariantFileSelect;
         }
     if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
         runItemsEdit();
