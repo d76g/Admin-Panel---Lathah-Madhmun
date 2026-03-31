@@ -915,6 +915,11 @@
 
             $("#item_attributes").html(html);
             $("#item_attributes input[data-role=tagsinput]").tagsinput();
+            $("#item_attributes input[data-role=tagsinput]").each(function() {
+                $(this).on('itemAdded itemRemoved change', function() {
+                    variants_update();
+                });
+            });
             $("#attributes").val('');
             $("#variants").val('');
             $("#item_variants").html('');
@@ -925,9 +930,10 @@
             variant_photos = [];
             variant_vIds = [];
             variant_filename = [];
-            var item_attribute = $("#item_attribute").map(function(idx, ele) {
-                return $(ele).val();
-            }).get();
+            var item_attribute = $("#item_attribute").val() || [];
+            if (!Array.isArray(item_attribute)) {
+                item_attribute = item_attribute ? [item_attribute] : [];
+            }
 
             var attributes = [];
             var attributeSet = [];

@@ -940,18 +940,21 @@
             return newPhoto;
         }
 
-        function selectAttribute(item_attribute = '') {
-            if (item_attribute) {
-                var item_attribute = $.parseJSON(atob(item_attribute));
+        function selectAttribute(item_attributeParam) {
+            var parsedItemAttribute = null;
+            if (item_attributeParam) {
+                parsedItemAttribute = $.parseJSON(atob(item_attributeParam));
             }
             var html = '';
             $("#item_attribute").find('option:selected').each(function() {
                 var $this = $(this);
-                var selected_options = [];
-                if (item_attribute) {
-                    $.each(item_attribute.attributes, function(index, attribute) {
+                var selected_options = '';
+                if (parsedItemAttribute && parsedItemAttribute.attributes) {
+                    $.each(parsedItemAttribute.attributes, function(index, attribute) {
                         if ($this.val() == attribute.attribute_id) {
-                            selected_options.push(attribute.attribute_options);
+                            selected_options = Array.isArray(attribute.attribute_options)
+                                ? attribute.attribute_options.join(',')
+                                : (attribute.attribute_options || '');
                         }
                     });
                 }
@@ -960,27 +963,37 @@
                 html += '<label>' + $this.text() + '</label>';
                 html += '</div>';
                 html += '<div class="col-lg-9">';
-                html += '<input type="text" class="form-control" id="attribute_options_' + $this.val() + '" value="' + selected_options + '" placeholder="Add attribute values" data-role="tagsinput" onchange="variants_update(\'' + btoa(JSON.stringify(item_attribute)) + '\')">';
+                var passPayload = parsedItemAttribute ? btoa(JSON.stringify(parsedItemAttribute)) : '';
+                html += '<input type="text" class="form-control" id="attribute_options_' + $this.val() + '" value="' + $('<div/>').text(selected_options).html() + '" placeholder="Add attribute values" data-role="tagsinput" onchange="variants_update(\'' + passPayload + '\')">';
                 html += '</div>';
                 html += '</div>';
             });
             $("#item_attributes").html(html);
             $("#item_attributes input[data-role=tagsinput]").tagsinput();
-            if ($("#item_attribute").val().length == 0) {
+            $("#item_attributes input[data-role=tagsinput]").each(function() {
+                var payload = parsedItemAttribute ? btoa(JSON.stringify(parsedItemAttribute)) : '';
+                $(this).on('itemAdded itemRemoved change', function() {
+                    variants_update(payload);
+                });
+            });
+            var sel = $("#item_attribute").val();
+            if (!sel || !sel.length) {
                 $("#attributes").val('');
                 $("#variants").val('');
                 $("#item_variants").html('');
             }
         }
 
-        function variants_update(item_attributeX = '') {
+        function variants_update(item_attributeX) {
+            var item_attributeXObj = null;
             if (item_attributeX) {
-                var item_attributeX = $.parseJSON(atob(item_attributeX));
+                item_attributeXObj = $.parseJSON(atob(item_attributeX));
             }
             var html = '';
-            var item_attribute = $("#item_attribute").map(function(idx, ele) {
-                return $(ele).val();
-            }).get();
+            var item_attribute = $("#item_attribute").val() || [];
+            if (!Array.isArray(item_attribute)) {
+                item_attribute = item_attribute ? [item_attribute] : [];
+            }
             if (item_attribute.length > 0) {
                 var attributes = [];
                 var attributeSet = [];
@@ -1017,8 +1030,8 @@
                         var variant_price = 1;
                         var variant_qty = -1;
                         var variant_image = variant_image_url = '';
-                        if (item_attributeX) {
-                            var variant_info = $.map(item_attributeX.variants, function(v, i) {
+                        if (item_attributeXObj && item_attributeXObj.variants) {
+                            var variant_info = $.map(item_attributeXObj.variants, function(v, i) {
                                 if (v.variant_sku == variant) {
                                     return v;
                                 }
