@@ -278,6 +278,7 @@
         var sizeTitle = [];
         var sizePrice = [];
         var attributes_list = [];
+        var savedItemAttribute = null;
         var categories_list = [];
         var restaurant_list = [];
         var photos = [];
@@ -432,13 +433,9 @@
                     $("#item_attribute").show().chosen({
                         "placeholder_text": "{{ trans('lang.select_attribute') }}"
                     });
-                    if (product.item_attribute) {
-                        $("#item_attribute").attr("onChange", "selectAttribute('" + btoa(JSON.stringify(product.item_attribute)) + "')");
-                        selectAttribute(btoa(JSON.stringify(product.item_attribute)));
-                    } else {
-                        $("#item_attribute").attr("onChange", "selectAttribute()");
-                        selectAttribute();
-                    }
+                    savedItemAttribute = product.item_attribute || null;
+                    $("#item_attribute").attr("onChange", "selectAttribute()");
+                    selectAttribute();
                 });
                 if (product.hasOwnProperty('product_specification')) {
                     product_specification = product.product_specification;
@@ -1001,11 +998,8 @@
             });
         }
 
-        function selectAttribute(item_attributeParam) {
-            var parsedItemAttribute = null;
-            if (item_attributeParam) {
-                parsedItemAttribute = $.parseJSON(atob(item_attributeParam));
-            }
+        function selectAttribute() {
+            var parsedItemAttribute = savedItemAttribute;
             var html = '';
             $("#item_attribute").find('option:selected').each(function() {
                 var $this = $(this);
@@ -1024,17 +1018,20 @@
                 html += '<label>' + $this.text() + '</label>';
                 html += '</div>';
                 html += '<div class="col-lg-9">';
-                var passPayload = parsedItemAttribute ? btoa(JSON.stringify(parsedItemAttribute)) : '';
-                html += '<input type="text" class="form-control" id="attribute_options_' + $this.val() + '" value="' + $('<div/>').text(selected_options).html() + '" placeholder="Add attribute values" data-role="tagsinput" onchange="variants_update(\'' + passPayload + '\')">';
+                html += '<input type="text" class="form-control" id="attribute_options_' + $this.val() + '" placeholder="Add attribute values" data-role="tagsinput" onchange="variants_update()">';
                 html += '</div>';
                 html += '</div>';
             });
             $("#item_attributes").html(html);
+            $("#item_attributes input[data-role=tagsinput]").each(function() {
+                if (selectedOptionsFor($(this).attr('id'))) {
+                    $(this).val(selectedOptionsFor($(this).attr('id')));
+                }
+            });
             $("#item_attributes input[data-role=tagsinput]").tagsinput();
             $("#item_attributes input[data-role=tagsinput]").each(function() {
-                var payload = parsedItemAttribute ? btoa(JSON.stringify(parsedItemAttribute)) : '';
                 $(this).on('itemAdded itemRemoved change', function() {
-                    variants_update(payload);
+                    variants_update();
                 });
             });
             var sel = $("#item_attribute").val();
@@ -1042,14 +1039,29 @@
                 $("#attributes").val('');
                 $("#variants").val('');
                 $("#item_variants").html('');
+            } else {
+                variants_update();
             }
         }
 
-        function variants_update(item_attributeX) {
-            var item_attributeXObj = null;
-            if (item_attributeX) {
-                item_attributeXObj = $.parseJSON(atob(item_attributeX));
+        function selectedOptionsFor(inputId) {
+            if (!savedItemAttribute || !savedItemAttribute.attributes || !inputId) {
+                return '';
             }
+            var attributeId = inputId.replace('attribute_options_', '');
+            var options = '';
+            $.each(savedItemAttribute.attributes, function(index, attribute) {
+                if (attribute.attribute_id == attributeId) {
+                    options = Array.isArray(attribute.attribute_options)
+                        ? attribute.attribute_options.join(',')
+                        : (attribute.attribute_options || '');
+                }
+            });
+            return options;
+        }
+
+        function variants_update() {
+            var item_attributeXObj = savedItemAttribute;
             var html = '';
             var item_attribute = $("#item_attribute").val() || [];
             if (!Array.isArray(item_attribute)) {

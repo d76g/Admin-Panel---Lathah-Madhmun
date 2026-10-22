@@ -286,7 +286,7 @@
 
 <script src="{{ asset('js/jquery.cookie.js') }}"></script>
 
-<script src="{{ asset('js/jquery.validate.js') }}"></script>
+<script src="{{ asset('js/jquery.validate.js') }}?v={{ filemtime(public_path('js/jquery.validate.js')) }}"></script>
 
 <script type="text/javascript">
 
