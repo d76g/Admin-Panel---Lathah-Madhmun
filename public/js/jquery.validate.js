@@ -48,9 +48,7 @@ function initializeFirebaseApp() {
             if (firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId && firebaseConfig.storageBucket) {
                 firebase.initializeApp(firebaseConfig);
                 console.log('Firebase initialized successfully');
-                console.log('Project ID:', firebaseConfig.projectId);
-                console.log('Storage Bucket:', firebaseConfig.storageBucket);
-                
+
                 // Trigger custom event for other scripts to listen to
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('firebaseInitialized'));

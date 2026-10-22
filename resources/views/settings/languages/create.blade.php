@@ -81,14 +81,7 @@ function initializeLanguageFirebase() {
             database = firebase.firestore();
             storageRef = firebase.storage().ref('language');
             ref = database.collection('settings').doc('languages');
-            
-            // Log the storage bucket being used
-            var app = firebase.app();
-            var config = app.options;
-            console.log('Language page Firebase initialized successfully');
-            console.log('Storage Bucket:', config.storageBucket);
-            console.log('Project ID:', config.projectId);
-            
+
             // Load languages list
             loadLanguagesList();
             return true;
@@ -257,7 +250,6 @@ async function storeImageData() {
 			}
 			
 			console.log('Uploading image to Firebase Storage...');
-			console.log('Storage bucket:', firebase.app().options.storageBucket);
 			console.log('File name:', fileName);
 			console.log('Content type:', contentType);
 			

@@ -515,6 +515,7 @@
                 jQuery("#data-table_processing").hide();
             })
             $(".edit-form-btn").click(async function() {
+                commitAttributeTags();
                 var name = $(".food_name").val();
                 var price = $(".food_price").val();
                 var quantity = $(".item_quantity").val();
@@ -648,7 +649,7 @@
                                         'variant_quantity': variant_quantity
                                     });
                                 }
-                                if (variant_quantity = '' || variant_quantity < -1 || variant_quantity == 0) {
+                                if (variant_quantity === '' || parseInt(variant_quantity, 10) < -1 || parseInt(variant_quantity, 10) === 0) {
                                     quantityerror++;
                                 }
                                 if (variant_price == "" || variant_price <= 0) {
@@ -983,6 +984,23 @@
             return newPhoto;
         }
 
+        function commitAttributeTags() {
+            $("#item_attributes input[data-role=tagsinput]").each(function() {
+                var $el = $(this);
+                if (typeof $el.tagsinput !== 'function') {
+                    return;
+                }
+                try {
+                    var pendingInput = $el.tagsinput('input');
+                    var pending = pendingInput && pendingInput.val ? pendingInput.val() : '';
+                    if (pending && String(pending).trim() !== '') {
+                        $el.tagsinput('add', String(pending).trim());
+                        pendingInput.val('');
+                    }
+                } catch (e) {}
+            });
+        }
+
         function selectAttribute(item_attributeParam) {
             var parsedItemAttribute = null;
             if (item_attributeParam) {
@@ -1045,8 +1063,13 @@
                     if (attribute_options) {
                         var attribute_options = attribute_options.split(',');
                         attribute_options = $.map(attribute_options, function(value) {
-                            return value.replace(/[^0-9a-zA-Z a]/g, '');
+                            return String(value).replace(/[^\p{L}\p{N} ]/gu, '').trim();
+                        }).filter(function(value) {
+                            return value !== '';
                         });
+                        if (!attribute_options.length) {
+                            return;
+                        }
                         attributeSet.push(attribute_options);
                         attributes.push({
                             'attribute_id': attribute,

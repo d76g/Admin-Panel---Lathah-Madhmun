@@ -720,9 +720,7 @@ var doNotChangeAlert = '{{trans("lang.do_not_change")}}';
                 if (config && config.apiKey && config.authDomain && config.projectId && config.storageBucket) {
                     firebase.initializeApp(config);
                     console.log('Firebase initialized successfully');
-                    console.log('Project ID:', config.projectId);
-                    console.log('Storage Bucket:', config.storageBucket);
-                    
+
                     database = firebase.firestore();
                     geoFirestore = new GeoFirestore(database);
                     createdAtman = firebase.firestore.Timestamp.fromDate(new Date());
