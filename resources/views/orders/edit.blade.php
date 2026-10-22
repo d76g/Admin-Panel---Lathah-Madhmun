@@ -1201,6 +1201,9 @@
                             if (orderStatus == 'Order Rejected' || orderStatus == 'Order Cancelled' || orderStatus == 'Driver Rejected') {
                                 await removeRedeemCashback();
                             }
+                            if (orderStatus == 'Order Rejected' || orderStatus == 'Order Cancelled') {
+                                await releaseOfferPhoneClaims(order);
+                            }
                             var subject = '';
                             var message = '';
                             if (orderStatus == "Order Completed" && orderTakeAwayOption ==
@@ -1935,6 +1938,43 @@
 
 
         })
+        function offerPhoneKey(author) {
+            if (!author) {
+                return '';
+            }
+            var phone = String(author.phoneNumber || '').replace(/\D/g, '');
+            var code = String(author.countryCode || '').replace(/\D/g, '');
+            if (!phone) {
+                return '';
+            }
+            if (!code || phone.indexOf(code) === 0) {
+                return phone;
+            }
+            return code + phone;
+        }
+
+        async function releaseOfferPhoneClaims(orderData) {
+            if (!orderData || !orderData.products || !orderData.products.length) {
+                return;
+            }
+            var phoneKey = offerPhoneKey(orderData.author);
+            if (!phoneKey) {
+                return;
+            }
+            for (var i = 0; i < orderData.products.length; i++) {
+                var lineId = String(orderData.products[i].id || '');
+                var productId = lineId.split('~')[0];
+                if (!productId) {
+                    continue;
+                }
+                var productDoc = await database.collection('vendor_products').doc(productId).get();
+                if (!productDoc.exists || productDoc.data().oneTimePerPhone !== true) {
+                    continue;
+                }
+                await database.collection('offer_phone_claims').doc(phoneKey + '_' + productId).delete();
+            }
+        }
+
         async function getRefund() {
             jQuery('#data-table_processing').show();
             ref.get().then(async function(snapshot) {
@@ -2076,6 +2116,7 @@
                             'status': 'Order Cancelled'
                         });
                     }
+                    await releaseOfferPhoneClaims(orderData);
 
                     await $.ajax({
                         type: 'POST',

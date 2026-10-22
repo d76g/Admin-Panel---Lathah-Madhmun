@@ -18586,7 +18586,7 @@ form p:last-child {
 
     position: absolute;
 
-    left: -9999px;
+    left: 0;
 
     opacity: 0;
 

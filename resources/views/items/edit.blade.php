@@ -78,12 +78,37 @@
                                 </div>
                             </div>
                             <div class="form-group row width-50">
+                                <label class="col-3 control-label">{{ trans('lang.item_barcode') }}</label>
+                                <div class="col-7">
+                                    <input type="text" class="form-control item_barcode" value="">
+                                    <div class="form-text text-muted">
+                                        {{ trans('lang.item_barcode_help') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row width-50">
                                 <label class="col-3 control-label">{{ trans('lang.item_quantity') }}</label>
                                 <div class="col-7">
                                     <input type="number" class="form-control item_quantity" value="-1">
                                     <div class="form-text text-muted">
                                         {{ trans('lang.item_quantity_help') }}
                                     </div>
+                                </div>
+                            </div>
+                            <div class="form-group row width-50">
+                                <label class="col-3 control-label">{{ trans('lang.daily_purchase_limit') }}</label>
+                                <div class="col-7">
+                                    <input type="number" class="form-control daily_purchase_limit" value="-1">
+                                    <div class="form-text text-muted">
+                                        {{ trans('lang.daily_purchase_limit_help') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check width-100">
+                                <input type="checkbox" class="one_time_per_phone" id="one_time_per_phone">
+                                <label class="col-3 control-label" for="one_time_per_phone">{{ trans('lang.one_time_per_phone') }}</label>
+                                <div class="form-text text-muted">
+                                    {{ trans('lang.one_time_per_phone_help') }}
                                 </div>
                             </div>
                             <div class="form-group row width-100" id="attributes_div">
@@ -453,6 +478,9 @@
                 $(".food_name").val(product.name);
                 $(".food_price").val(product.price);
                 $(".item_quantity").val(product.quantity);
+                $(".item_barcode").val(product.barcode || '');
+                $(".daily_purchase_limit").val(product.hasOwnProperty("dailyPurchaseLimit") ? product.dailyPurchaseLimit : -1);
+                $(".one_time_per_phone").prop('checked', product.oneTimePerPhone === true);
                 $(".food_discount").val(product.disPrice);
                 if (product.hasOwnProperty("calories")) {
                     $(".food_calories").val(product.calories)
@@ -490,6 +518,9 @@
                 var name = $(".food_name").val();
                 var price = $(".food_price").val();
                 var quantity = $(".item_quantity").val();
+                var item_barcode = $(".item_barcode").val();
+                var daily_purchase_limit = $(".daily_purchase_limit").val();
+                var one_time_per_phone = $(".one_time_per_phone").is(":checked");
                 var restaurant = $("#food_restaurant option:selected").val();
                 var category = $("#food_category option:selected").val();
                 var foodCalories = parseInt($(".food_calories").val());
@@ -554,6 +585,15 @@
                         $(".error_top").append("<p>{{ trans('lang.enter_item_quantity_error') }}</p>");
                     } else {
                         $(".error_top").append("<p>{{ trans('lang.invalid_item_quantity_error') }}</p>");
+                    }
+                    window.scrollTo(0, 0);
+                } else if (daily_purchase_limit == '' || daily_purchase_limit < -1) {
+                    $(".error_top").show();
+                    $(".error_top").html("");
+                    if (daily_purchase_limit == '') {
+                        $(".error_top").append("<p>{{ trans('lang.enter_daily_purchase_limit_error') }}</p>");
+                    } else {
+                        $(".error_top").append("<p>{{ trans('lang.invalid_daily_purchase_limit_error') }}</p>");
                     }
                     window.scrollTo(0, 0);
                 } else if (description == '') {
@@ -650,6 +690,9 @@
                             'name': name,
                             'price': price.toString(),
                             'quantity': parseInt(quantity),
+                            'barcode': item_barcode,
+                            'dailyPurchaseLimit': parseInt(daily_purchase_limit),
+                            'oneTimePerPhone': one_time_per_phone,
                             'disPrice': discount,
                             'vendorID': restaurant,
                             'categoryID': category,

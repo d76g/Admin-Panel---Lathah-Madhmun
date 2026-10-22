@@ -1218,6 +1218,22 @@ return [
 
     'item_quantity_help' => "For unlimited set -1",
 
+    'daily_purchase_limit' => "Daily purchase limit",
+
+    'daily_purchase_limit_help' => "Max units one customer can buy per day. For no limit set -1",
+
+    'enter_daily_purchase_limit_error' => "Please enter daily purchase limit",
+
+    'invalid_daily_purchase_limit_error' => "Invalid daily purchase limit",
+
+    'one_time_per_phone' => "One order per phone number",
+
+    'one_time_per_phone_help' => "When enabled, this offer can be ordered only once for each phone number",
+
+    'item_barcode' => "Barcode",
+
+    'item_barcode_help' => "Optional. Stored for admin use and not shown to customers",
+
 
 
     //---------------------------------------JJJJ---------------------------------------

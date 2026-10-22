@@ -1218,6 +1218,22 @@ return [
 
     'item_quantity_help' => "For unlimited set -1",
 
+    'daily_purchase_limit' => "حد الشراء اليومي",
+
+    'daily_purchase_limit_help' => "أقصى عدد يمكن للعميل شراؤه في اليوم. بدون حد ضع -1",
+
+    'enter_daily_purchase_limit_error' => "يرجى إدخال حد الشراء اليومي",
+
+    'invalid_daily_purchase_limit_error' => "حد الشراء اليومي غير صالح",
+
+    'one_time_per_phone' => "طلب واحد لكل رقم جوال",
+
+    'one_time_per_phone_help' => "عند التفعيل، يمكن طلب هذا العرض مرة واحدة فقط لكل رقم جوال",
+
+    'item_barcode' => "الباركود",
+
+    'item_barcode_help' => "اختياري. يُحفظ للاستخدام الإداري ولا يظهر للعميل",
+
 
 
     //---------------------------------------JJJJ---------------------------------------

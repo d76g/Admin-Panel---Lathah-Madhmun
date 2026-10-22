@@ -86,12 +86,37 @@
                                 </div>
                             </div>
                             <div class="form-group row width-50">
+                                <label class="col-3 control-label">{{ trans('lang.item_barcode') }}</label>
+                                <div class="col-7">
+                                    <input type="text" class="form-control item_barcode" value="">
+                                    <div class="form-text text-muted">
+                                        {{ trans('lang.item_barcode_help') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row width-50">
                                 <label class="col-3 control-label">{{ trans('lang.item_quantity') }}</label>
                                 <div class="col-7">
                                     <input type="number" class="form-control item_quantity" value="-1">
                                     <div class="form-text text-muted">
                                         {{ trans('lang.item_quantity_help') }}
                                     </div>
+                                </div>
+                            </div>
+                            <div class="form-group row width-50">
+                                <label class="col-3 control-label">{{ trans('lang.daily_purchase_limit') }}</label>
+                                <div class="col-7">
+                                    <input type="number" class="form-control daily_purchase_limit" value="-1">
+                                    <div class="form-text text-muted">
+                                        {{ trans('lang.daily_purchase_limit_help') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check width-100">
+                                <input type="checkbox" class="one_time_per_phone" id="one_time_per_phone">
+                                <label class="col-3 control-label" for="one_time_per_phone">{{ trans('lang.one_time_per_phone') }}</label>
+                                <div class="form-text text-muted">
+                                    {{ trans('lang.one_time_per_phone_help') }}
                                 </div>
                             </div>
                             <div class="form-group row width-100" id="attributes_div">
@@ -418,6 +443,9 @@
                 var foodTakeaway = $(".food_take_away_option").is(":checked");
                 var discount = $(".food_discount").val();
                 var item_quantity = $(".item_quantity").val();
+                var item_barcode = $(".item_barcode").val();
+                var daily_purchase_limit = $(".daily_purchase_limit").val();
+                var one_time_per_phone = $(".one_time_per_phone").is(":checked");
                 if (discount == '') {
                     discount = "0";
                 }
@@ -467,6 +495,16 @@
                     } else {
                         $(".error_top").append(
                             "<p>{{ trans('lang.invalid_item_quantity_error') }}</p>");
+                    }
+                    window.scrollTo(0, 0);
+                } else if (daily_purchase_limit == '' || daily_purchase_limit < -1) {
+                    $(".error_top").show();
+                    $(".error_top").html("");
+                    if (daily_purchase_limit == '') {
+                        $(".error_top").append("<p>{{ trans('lang.enter_daily_purchase_limit_error') }}</p>");
+                    } else {
+                        $(".error_top").append(
+                            "<p>{{ trans('lang.invalid_daily_purchase_limit_error') }}</p>");
                     }
                     window.scrollTo(0, 0);
                 } else if (description == '') {
@@ -572,6 +610,9 @@
                                     'name': name,
                                     'price': price.toString(),
                                     'quantity': parseInt(item_quantity),
+                                    'barcode': item_barcode,
+                                    'dailyPurchaseLimit': parseInt(daily_purchase_limit),
+                                    'oneTimePerPhone': one_time_per_phone,
                                     'disPrice': discount.toString(),
                                     'vendorID': restaurant,
                                     'categoryID': category,
