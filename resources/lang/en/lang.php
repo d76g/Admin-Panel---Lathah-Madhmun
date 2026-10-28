@@ -4384,6 +4384,22 @@ return [
 
     'description_help' => 'Insert your description',
 
+    'on_board_title_en' => 'Title (English)',
+
+    'on_board_title_ar' => 'Title (Arabic)',
+
+    'on_board_description_en' => 'Description (English)',
+
+    'on_board_description_ar' => 'Description (Arabic)',
+
+    'on_board_title_en_help' => 'Shown when the app language is English',
+
+    'on_board_title_ar_help' => 'Shown when the app language is Arabic',
+
+    'on_board_description_en_help' => 'Shown when the app language is English',
+
+    'on_board_description_ar_help' => 'Shown when the app language is Arabic',
+
 
 
     'app_screen' => 'App Screen',

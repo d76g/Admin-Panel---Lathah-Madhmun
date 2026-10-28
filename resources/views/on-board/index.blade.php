@@ -136,8 +136,10 @@
             var id = val.id;
             var route1 = '{{route("on-board.save",":id")}}';
             route1 = route1.replace(':id', id);
-            html = html + '<td><a href="' + route1 + '">' + val.title + '</a></td>';
-            html = html + '<td>' + val.description + '</td>';
+            var listTitle = val.titleEn || val.title || '';
+            var listDescription = val.descriptionEn || val.description || '';
+            html = html + '<td><a href="' + route1 + '">' + listTitle + '</a></td>';
+            html = html + '<td>' + listDescription + '</td>';
             var type = '';
             if (val.type == "customerApp") {
                 type = "Customer";

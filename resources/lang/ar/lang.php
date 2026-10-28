@@ -4386,6 +4386,22 @@ return [
 
     'description_help' => 'Insert your description',
 
+    'on_board_title_en' => 'العنوان (الإنجليزية)',
+
+    'on_board_title_ar' => 'العنوان (العربية)',
+
+    'on_board_description_en' => 'الوصف (الإنجليزية)',
+
+    'on_board_description_ar' => 'الوصف (العربية)',
+
+    'on_board_title_en_help' => 'يظهر عندما تكون لغة التطبيق الإنجليزية',
+
+    'on_board_title_ar_help' => 'يظهر عندما تكون لغة التطبيق العربية',
+
+    'on_board_description_en_help' => 'يظهر عندما تكون لغة التطبيق الإنجليزية',
+
+    'on_board_description_ar_help' => 'يظهر عندما تكون لغة التطبيق العربية',
+
 
 
     'app_screen' => 'App Screen',

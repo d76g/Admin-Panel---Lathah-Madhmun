@@ -23,22 +23,42 @@
                             <fieldset>
                                 <legend>{{trans('lang.on_board_details')}}</legend>
                                 <div class="form-group row width-100">
-                                    <label class="col-3 control-label">{{trans('lang.title')}}<span
+                                    <label class="col-3 control-label">{{trans('lang.on_board_title_en')}}<span
                                             class="required-field"></span></label>
                                     <div class="col-7">
-                                        <input type="text" class="form-control title">
+                                        <input type="text" class="form-control title-en" dir="ltr">
                                         <div class="form-text text-muted">
-                                            {{ trans("lang.title_help") }}
+                                            {{ trans("lang.on_board_title_en_help") }}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row width-100">
-                                    <label class="col-3 control-label">{{trans('lang.description')}}<span
+                                    <label class="col-3 control-label">{{trans('lang.on_board_title_ar')}}<span
                                             class="required-field"></span></label>
                                     <div class="col-7">
-                                        <textarea rows="6" id="description" class="description form-control"></textarea>
+                                        <input type="text" class="form-control title-ar" dir="rtl">
                                         <div class="form-text text-muted">
-                                            {{ trans("lang.description_help") }}
+                                            {{ trans("lang.on_board_title_ar_help") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row width-100">
+                                    <label class="col-3 control-label">{{trans('lang.on_board_description_en')}}<span
+                                            class="required-field"></span></label>
+                                    <div class="col-7">
+                                        <textarea rows="6" class="description-en form-control" dir="ltr"></textarea>
+                                        <div class="form-text text-muted">
+                                            {{ trans("lang.on_board_description_en_help") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row width-100">
+                                    <label class="col-3 control-label">{{trans('lang.on_board_description_ar')}}<span
+                                            class="required-field"></span></label>
+                                    <div class="col-7">
+                                        <textarea rows="6" class="description-ar form-control" dir="rtl"></textarea>
+                                        <div class="form-text text-muted">
+                                            {{ trans("lang.on_board_description_ar_help") }}
                                         </div>
                                     </div>
                                 </div>
@@ -66,35 +86,46 @@
             var ref = database.collection('on_boarding').where("id", "==", requestId);
             ref.get().then(async function (snapshots) {
                 var data = snapshots.docs[0].data();
-                $(".title").val(data.title);
-                $(".description").val(data.description);
+                $(".title-en").val(data.titleEn || data.title || '');
+                $(".title-ar").val(data.titleAr || '');
+                $(".description-en").val(data.descriptionEn || data.description || '');
+                $(".description-ar").val(data.descriptionAr || '');
                 jQuery("#data-table_processing").hide();
             })
         });
+        function showOnBoardError(message) {
+            jQuery("#overlay").hide();
+            $(".error_top").show();
+            $(".error_top").html("");
+            $(".error_top").append("<p>" + message + "</p>");
+            window.scrollTo(0, 0);
+        }
         $(".edit-setting-btn").click(function () {
-            jQuery("#overlay").show();
-            var title = $(".title").val();
-            var description = $(".description").val();
-            if (title == '') {
-                $(".error_top").show();
-                $(".error_top").html("");
-                $(".error_top").append("<p>{{trans('lang.title_help')}}</p>");
-                window.scrollTo(0, 0);
-            } else if (description == '') {
-                $(".error_top").show();
-                $(".error_top").html("");
-                $(".error_top").append("<p>{{trans('lang.description_help')}}</p>");
-                window.scrollTo(0, 0);
+            var titleEn = $(".title-en").val().trim();
+            var titleAr = $(".title-ar").val().trim();
+            var descriptionEn = $(".description-en").val().trim();
+            var descriptionAr = $(".description-ar").val().trim();
+            if (titleEn == '') {
+                showOnBoardError("{{trans('lang.on_board_title_en_help')}}");
+            } else if (titleAr == '') {
+                showOnBoardError("{{trans('lang.on_board_title_ar_help')}}");
+            } else if (descriptionEn == '') {
+                showOnBoardError("{{trans('lang.on_board_description_en_help')}}");
+            } else if (descriptionAr == '') {
+                showOnBoardError("{{trans('lang.on_board_description_ar_help')}}");
             } else {
+                jQuery("#overlay").show();
                 database.collection('on_boarding').doc(requestId).update({
-                    'title': title,
-                    'description': description,
+                    'title': titleEn,
+                    'description': descriptionEn,
+                    'titleEn': titleEn,
+                    'titleAr': titleAr,
+                    'descriptionEn': descriptionEn,
+                    'descriptionAr': descriptionAr,
                 }).then(function (result) {
                     window.location.href = '{{ route("on-board")}}';
                 }).catch(function (error) {
-                    $(".error_top").show();
-                    $(".error_top").html("");
-                    $(".error_top").append("<p>" + error + "</p>");
+                    showOnBoardError(error);
                 })
             }
         })
